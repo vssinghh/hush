@@ -21,3 +21,10 @@ local.properties
 *.log
 logcat*.txt
 full_logcat.txt
+
+# Agent scaffolding
+.agents/
+ORIGINAL_REQUEST.md
+PROJECT.md
+TEST_INFRA.md
+TEST_READY.md
