@@ -1,0 +1,23 @@
+# Gradle cache and build directories
+.gradle/
+build/
+app/build/
+build-stub/
+.kotlin/
+
+# Local developer configuration
+local.properties
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+
+# Log files
+*.log
+logcat*.txt
+full_logcat.txt
