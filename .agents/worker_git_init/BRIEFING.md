@@ -29,7 +29,10 @@ Satisfy requirement R5 by initializing a Git repository and committing the codeb
 - **Code layout**: Android standard layout.
 
 ## Key Decisions Made
-- [TBD]
+- Initialized local git repository.
+- Created `.gitignore` ignoring Gradle/build caches (`build/`, `app/build/`, `build-stub/`, `.gradle/`, `.kotlin/`, `local.properties`), log files (`*.log`, `logcat*.txt`, `full_logcat.txt`), and IDE configurations (`.idea/`, `*.iml`, `.DS_Store`).
+- Staged all remaining codebase files and committed with standard credentials.
+- Verified state with `git status` and `git log`.
 
 ## Artifact Index
 - /Users/vipinsingh/Documents/Antigravity/open source/hush/.agents/worker_git_init/handoff.md — Handoff report with git details.
