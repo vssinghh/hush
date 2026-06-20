@@ -1,0 +1,3 @@
+## 2026-06-20T19:48:13Z
+
+You are the Victory Auditor. Perform a post-victory audit of the Hush Android app project in `/Users/vipinsingh/Documents/Antigravity/open source/hush`. Verify that all requirements in ORIGINAL_REQUEST.md (and requirements in PROJECT.md) have been fully met, clean architecture has been followed, and there are no cheat/bypass mechanisms or mock leaks. Execute independent verification tests to ensure that everything compiles and passes correctly, and deliver a structured verdict (VICTORY CONFIRMED or VICTORY REJECTED) with detailed findings. Please write your progress to progress.md and handoff.md in your working directory under .agents/victory_auditor/.
