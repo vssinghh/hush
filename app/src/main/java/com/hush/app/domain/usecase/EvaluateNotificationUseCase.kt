@@ -22,7 +22,8 @@ class EvaluateNotificationUseCase @Inject constructor(
         title: String?,
         text: String?,
         sender: String?,
-        currentTime: LocalTime = LocalTime.now()
+        currentTime: LocalTime = LocalTime.now(),
+        logResult: Boolean = true
     ): RuleAction {
         val rules = ruleRepository.getActiveRules()
         var matchedRuleId: Long? = null
@@ -91,8 +92,8 @@ class EvaluateNotificationUseCase @Inject constructor(
             }
         }
 
-        // Log history (Only log when matchedRuleId != null)
-        if (matchedRuleId != null) {
+        // Log history (Only log when matchedRuleId != null and logging is enabled)
+        if (matchedRuleId != null && logResult) {
             val event = NotificationEvent(
                 appName = appName,
                 packageName = packageName,

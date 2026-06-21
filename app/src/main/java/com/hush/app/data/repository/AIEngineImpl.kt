@@ -256,7 +256,7 @@ class AIEngineImpl @Inject constructor(
             }
 
             val app = if (json.isNull("app")) null else json.getString("app")
-            val matchPattern = if (json.isNull("matchPattern")) null else json.getString("matchPattern")
+            val matchPattern = if (json.isNull("matchPattern")) null else json.getString("matchPattern").takeIf { it.isNotBlank() }
             val isInverted = json.optBoolean("isInverted", false)
 
             val timeStartStr = if (json.isNull("timeStart")) null else json.getString("timeStart")
