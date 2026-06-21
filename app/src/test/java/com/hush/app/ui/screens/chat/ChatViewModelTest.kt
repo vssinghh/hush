@@ -329,7 +329,7 @@ class ChatViewModelTest {
         val saved = ruleRepository.insertedRules.first()
         assertEquals("Mute WhatsApp", saved.name)
         assertEquals("com.whatsapp", saved.appPackage)
-        assertEquals("Whatsapp", saved.appDisplayName)
+        assertEquals("WhatsApp", saved.appDisplayName)
         assertEquals(42, saved.priority)
         assertTrue(saved.enabled)
 
