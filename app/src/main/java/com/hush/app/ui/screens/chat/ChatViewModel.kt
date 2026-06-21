@@ -1,5 +1,9 @@
 package com.hush.app.ui.screens.chat
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -36,6 +40,7 @@ class ChatViewModel @Inject constructor(
 
     val proposedRule = mutableStateOf<ParsedCommand?>(null)
     val errorMessage = mutableStateOf<String?>(null)
+    val isProcessing = mutableStateOf(false)
 
     val isListening = mutableStateOf(false)
     val textState = mutableStateOf("")
@@ -104,6 +109,7 @@ class ChatViewModel @Inject constructor(
 
         aiJob?.cancel()
         aiJob = viewModelScope.launch {
+            isProcessing.value = true
             try {
                 val result = parseCommandUseCase(prompt)
                 if (result.summary == "MALFORMED_JSON_TRIGGER") {
@@ -114,6 +120,8 @@ class ChatViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 errorMessage.value = "AI Engine error: ${e.message}"
+            } finally {
+                isProcessing.value = false
             }
         }
     }
@@ -122,7 +130,7 @@ class ChatViewModel @Inject constructor(
         val rule = proposedRule.value ?: return
         viewModelScope.launch {
             try {
-                val appDisplayName = rule.app?.substringAfterLast('.')?.replaceFirstChar { it.uppercase() }
+                val appDisplayName = rule.app?.let { pkg -> resolveAppDisplayName(pkg) }
                 val priority = ruleRepository.getNextPriority()
                 val entity = Rule(
                     name = rule.summary,
@@ -152,6 +160,70 @@ class ChatViewModel @Inject constructor(
 
     fun cancelProposedRule() {
         proposedRule.value = null
+    }
+
+    fun startModelDownload() {
+        viewModelScope.launch {
+            try {
+                aiEngine.downloadModel()
+            } catch (e: Exception) {
+                errorMessage.value = "Model download failed: ${e.message}"
+            }
+        }
+    }
+
+    fun retryAICheck() {
+        viewModelScope.launch {
+            try {
+                aiEngine.recheckAvailability()
+            } catch (e: Exception) {
+                errorMessage.value = "AI check failed: ${e.message}"
+            }
+        }
+    }
+
+    fun openAICoreUpdateInStore(context: Context) {
+        try {
+            // Try Play Store app first
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.google.android.aicore"))
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            // Fall back to browser
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.aicore"))
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        }
+    }
+
+    companion object {
+        private val WELL_KNOWN_APPS = mapOf(
+            "com.instagram.android" to "Instagram",
+            "com.whatsapp" to "WhatsApp",
+            "com.slack" to "Slack",
+            "com.google.android.gm" to "Gmail",
+            "com.facebook.katana" to "Facebook",
+            "com.twitter.android" to "X (Twitter)",
+            "com.snapchat.android" to "Snapchat",
+            "com.spotify.music" to "Spotify",
+            "com.linkedin.android" to "LinkedIn"
+        )
+
+        private val GENERIC_SEGMENTS = setOf(
+            "android", "app", "com", "org", "net", "io", "google", "mobile", "lite"
+        )
+
+        fun resolveAppDisplayName(packageName: String): String {
+            // Check well-known mapping first
+            WELL_KNOWN_APPS[packageName]?.let { return it }
+
+            // Fallback: find the most meaningful segment of the package name
+            val segments = packageName.split(".")
+            val meaningful = segments.lastOrNull { it !in GENERIC_SEGMENTS }
+                ?: segments.lastOrNull()
+                ?: return packageName
+            return meaningful.replaceFirstChar { it.uppercase() }
+        }
     }
 }
 

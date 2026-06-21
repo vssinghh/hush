@@ -13,7 +13,7 @@ interface PermissionManager {
 
     fun requestNotificationAccess(context: Context)
     fun requestMicrophonePermission(launcher: ManagedActivityResultLauncher<String, Boolean>)
-    fun requestBatteryExemption(launcher: ManagedActivityResultLauncher<Intent, ActivityResult>)
+    fun requestBatteryExemption(context: Context)
     
     fun setNotificationAccessDenied(denied: Boolean)
 }

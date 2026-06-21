@@ -1,13 +1,17 @@
 package com.hush.app.ui.screens.rules
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,10 +19,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.hush.app.domain.model.Rule
 import com.hush.app.domain.model.RuleAction
+import com.hush.app.ui.theme.*
+
+// Accent color pairs cycled by index % 6
+private data class AccentPair(val main: Color, val light: Color)
+
+private val accentPairs = listOf(
+    AccentPair(AccentPurple, AccentPurpleLight),
+    AccentPair(AccentBlue, AccentBlueLight),
+    AccentPair(AccentGreen, AccentGreenLight),
+    AccentPair(AccentRed, AccentRedLight),
+    AccentPair(AccentAmber, AccentAmberLight),
+    AccentPair(AccentTeal, AccentTealLight),
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,23 +48,20 @@ fun RulesScreen(
     val rulesList by viewModel.rulesList.collectAsState()
     var selectedRule by remember { mutableStateOf<Rule?>(null) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Rules Management") })
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { /* Navigate or open create dialog */ }) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Rule")
-            }
-        },
-        modifier = modifier.testTag("rules_screen")
-    ) { innerPadding ->
+    Surface(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag("rules_screen"),
+        color = MaterialTheme.colorScheme.background
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Content ──
             if (rulesList.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -54,19 +70,39 @@ fun RulesScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("No active rules", style = MaterialTheme.typography.titleMedium)
+                        Icon(
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "No rules yet",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Head to Chat and tell the AI what to filter.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(vertical = 16.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
-                    items(
+                    itemsIndexed(
                         items = rulesList,
-                        key = { it.id }
-                    ) { rule ->
+                        key = { _, rule -> rule.id }
+                    ) { index, rule ->
+                        val accent = accentPairs[index % accentPairs.size]
+
                         val dismissState = rememberSwipeToDismissBoxState(
                             confirmValueChange = { dismissValue ->
                                 if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
@@ -86,7 +122,7 @@ fun RulesScreen(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .clip(CardDefaults.shape)
+                                        .clip(RoundedCornerShape(16.dp))
                                         .background(Color.Red.copy(alpha = 0.8f))
                                         .padding(horizontal = 16.dp),
                                     contentAlignment = Alignment.CenterEnd
@@ -103,20 +139,69 @@ fun RulesScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable { selectedRule = rule }
-                                        .testTag("rule_card_${rule.id}")
+                                        .testTag("rule_card_${rule.id}"),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    )
                                 ) {
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(16.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                            .padding(14.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Column {
-                                            val displayName = rule.name
-                                            Text(displayName, style = MaterialTheme.typography.titleMedium)
-                                            Text(rule.appDisplayName ?: rule.appPackage ?: "All Apps", style = MaterialTheme.typography.bodySmall)
+                                        // Colored icon circle
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(CircleShape)
+                                                .background(accent.light),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Notifications,
+                                                contentDescription = null,
+                                                tint = accent.main,
+                                                modifier = Modifier.size(20.dp)
+                                            )
                                         }
+                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        // Rule info
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = rule.name,
+                                                style = MaterialTheme.typography.titleMedium.copy(
+                                                    fontWeight = FontWeight.Bold
+                                                ),
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = rule.appDisplayName
+                                                    ?: rule.appPackage
+                                                    ?: "All Apps",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            if (rule.action == RuleAction.BLOCK || rule.action == RuleAction.MUTE) {
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Surface(
+                                                    shape = RoundedCornerShape(6.dp),
+                                                    color = if (rule.action == RuleAction.BLOCK) AccentRed.copy(alpha = 0.15f) else AccentAmber.copy(alpha = 0.15f)
+                                                ) {
+                                                    Text(
+                                                        text = rule.action.name,
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = if (rule.action == RuleAction.BLOCK) AccentRed else AccentAmber,
+                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        // Toggle switch
                                         Switch(
                                             checked = rule.enabled,
                                             onCheckedChange = {
@@ -134,6 +219,7 @@ fun RulesScreen(
         }
     }
 
+    // ── Rule Detail / Edit Dialog ──
     if (selectedRule != null) {
         val rule = selectedRule!!
         var actionState by remember(rule) { mutableStateOf(rule.action) }
@@ -156,28 +242,48 @@ fun RulesScreen(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Action:")
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                        RuleAction.entries.filter { it != RuleAction.ALLOW }.forEach { action ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { actionState = action }
+                                    .padding(vertical = 2.dp)
+                            ) {
+                                RadioButton(
+                                    selected = actionState == action,
+                                    onClick = { actionState = action },
+                                    modifier = Modifier.testTag("rule_edit_action_${action.name.lowercase()}")
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(action.name)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // Delete button
+                    OutlinedButton(
+                        onClick = {
+                            viewModel.deleteRule(rule)
+                            selectedRule = null
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("rule_delete_button"),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, AccentRed.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = AccentRed
+                        )
                     ) {
-                        RadioButton(
-                            selected = actionState == RuleAction.BLOCK,
-                            onClick = { actionState = RuleAction.BLOCK },
-                            modifier = Modifier.testTag("rule_edit_action_block")
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            modifier = Modifier.size(18.dp)
                         )
-                        Text("BLOCK")
-                        RadioButton(
-                            selected = actionState == RuleAction.MUTE,
-                            onClick = { actionState = RuleAction.MUTE },
-                            modifier = Modifier.testTag("rule_edit_action_mute")
-                        )
-                        Text("MUTE")
-                        RadioButton(
-                            selected = actionState == RuleAction.ALLOW,
-                            onClick = { actionState = RuleAction.ALLOW },
-                            modifier = Modifier.testTag("rule_edit_action_allow")
-                        )
-                        Text("ALLOW")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Delete Rule")
                     }
                 }
             },

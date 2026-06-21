@@ -49,8 +49,8 @@ class OnboardingViewModel @Inject constructor(
         refreshPermissions()
     }
 
-    fun requestBatteryExemption(launcher: ManagedActivityResultLauncher<Intent, ActivityResult>) {
-        permissionManager.requestBatteryExemption(launcher)
+    fun requestBatteryExemption(context: Context) {
+        permissionManager.requestBatteryExemption(context)
         refreshPermissions()
     }
 

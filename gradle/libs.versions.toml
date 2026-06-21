@@ -1,9 +1,9 @@
 [versions]
-agp = "8.5.0"
-kotlin = "2.0.0"
-ksp = "2.0.0-1.0.21"
-hilt = "2.51.1"
-room = "2.6.1"
+agp = "8.10.1"
+kotlin = "2.2.0"
+ksp = "2.2.0-2.0.2"
+hilt = "2.56"
+room = "2.7.2"
 androidx-core = "1.13.1"
 androidx-lifecycle = "2.8.2"
 activity-compose = "1.9.0"
@@ -14,11 +14,11 @@ coroutines = "1.8.1"
 junit = "4.13.2"
 androidx-test-ext = "1.1.5"
 espresso-core = "3.5.1"
-play-services-generativeai = "16.0.0-beta01"
+mlkit-genai-prompt = "1.0.0-beta2"
 kotlinx-coroutines-play-services = "1.8.1"
 
 [libraries]
-play-services-generativeai = { group = "com.google.android.gms", name = "play-services-generativeai", version.ref = "play-services-generativeai" }
+mlkit-genai-prompt = { group = "com.google.mlkit", name = "genai-prompt", version.ref = "mlkit-genai-prompt" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinx-coroutines-play-services" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }

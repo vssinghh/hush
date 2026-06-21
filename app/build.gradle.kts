@@ -122,7 +122,7 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.play.services.generativeai)
+    implementation(libs.mlkit.genai.prompt)
     implementation(libs.kotlinx.coroutines.play.services)
 
     // Local Unit Tests
