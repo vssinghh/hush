@@ -7,6 +7,9 @@ import com.hush.app.domain.model.RuleAction
 import com.hush.app.domain.repository.AIEngine
 import com.hush.app.domain.repository.AppInfo
 import com.hush.app.domain.repository.PackageResolver
+import com.hush.app.domain.repository.AIStatus
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -16,6 +19,13 @@ class LocalFakeAIEngine : AIEngine {
     var available = true
     var resultCommand: ParsedCommand? = null
     var parseError: Throwable? = null
+
+    override val status: StateFlow<AIStatus> = MutableStateFlow(AIStatus.READY)
+    override val downloadProgress: StateFlow<Int> = MutableStateFlow(100)
+    override val errorMessage: StateFlow<String?> = MutableStateFlow(null)
+
+    override suspend fun downloadModel() {}
+    override suspend fun recheckAvailability() {}
 
     override fun isAvailable(): Boolean = available
 

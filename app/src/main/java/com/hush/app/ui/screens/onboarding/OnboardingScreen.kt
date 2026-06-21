@@ -66,15 +66,7 @@ fun OnboardingScreen(
         viewModel.refreshPermissions()
     }
 
-    // Battery Optimization Launcher
-    val batteryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        viewModel.refreshPermissions()
-        if (result.resultCode != android.app.Activity.RESULT_OK) {
-            showBatteryWarning = true
-        }
-    }
+    // Battery Optimization — launch directly, ON_RESUME will refresh permissions
 
     // Warning Dialog for Battery Optimization Denial
     if (showBatteryWarning) {
@@ -141,7 +133,7 @@ fun OnboardingScreen(
                                 viewModel.requestMicrophonePermission(micPermissionLauncher)
                             },
                             onRequestBattery = {
-                                viewModel.requestBatteryExemption(batteryLauncher)
+                                viewModel.requestBatteryExemption(context)
                             },
                             onRequestDenyNotification = {
                                 viewModel.denyNotificationAccess()

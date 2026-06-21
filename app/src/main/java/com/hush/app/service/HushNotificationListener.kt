@@ -62,6 +62,7 @@ class HushNotificationListener : NotificationListenerService() {
         serviceScope.launch {
             try {
                 val packageName = sbn.packageName
+                Log.d("HushNotificationListener", ">> Notification received from: $packageName")
                 val appName = try {
                     val appInfo = packageManager.getApplicationInfo(
                         packageName,
@@ -100,6 +101,8 @@ class HushNotificationListener : NotificationListenerService() {
                     .atZone(ZoneId.systemDefault())
                     .toLocalTime()
 
+                Log.d("HushNotificationListener", ">> Evaluating: pkg=$packageName app=$appName title=$title text=$text sender=$sender")
+
                 // Invoke rule evaluation usecase
                 val action = evaluateNotificationUseCase.execute(
                     packageName = packageName,
@@ -110,9 +113,12 @@ class HushNotificationListener : NotificationListenerService() {
                     currentTime = notificationTime
                 )
 
+                Log.d("HushNotificationListener", ">> Result: action=$action for pkg=$packageName")
+
                 // Dismiss notification if matched rule action is BLOCK
                 if (action == RuleAction.BLOCK) {
                     cancelNotification(sbn.key)
+                    Log.d("HushNotificationListener", ">> BLOCKED notification from $packageName")
                 }
             } catch (e: Exception) {
                 Log.e("HushNotificationListener", "Error evaluating notification: ${e.message}", e)

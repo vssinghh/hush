@@ -15,9 +15,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import com.hush.app.ui.navigation.BottomTabRoute
 import com.hush.app.ui.screens.chat.ChatScreen
 import com.hush.app.ui.screens.history.HistoryScreen
@@ -68,8 +67,8 @@ fun MainScreen(
             navController = childNavController,
             startDestination = BottomTabRoute.Chat.route,
             modifier = Modifier.padding(innerPadding),
-            enterTransition = { fadeIn(tween(200)) },
-            exitTransition = { fadeOut(tween(200)) }
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None }
         ) {
             composable(BottomTabRoute.Chat.route) {
                 ChatScreen()

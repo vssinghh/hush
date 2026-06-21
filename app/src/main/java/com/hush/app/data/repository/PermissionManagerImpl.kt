@@ -58,11 +58,12 @@ class PermissionManagerImpl @Inject constructor(
         launcher.launch(Manifest.permission.RECORD_AUDIO)
     }
 
-    override fun requestBatteryExemption(launcher: ManagedActivityResultLauncher<Intent, ActivityResult>) {
+    override fun requestBatteryExemption(context: Context) {
         val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
             data = Uri.parse("package:${context.packageName}")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        launcher.launch(intent)
+        context.startActivity(intent)
     }
 
     override fun setNotificationAccessDenied(denied: Boolean) {

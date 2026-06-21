@@ -40,10 +40,8 @@ class FakePermissionManager @Inject constructor(
         microphoneGranted = true
     }
 
-    override fun requestBatteryExemption(launcher: ManagedActivityResultLauncher<Intent, ActivityResult>) {
+    override fun requestBatteryExemption(context: Context) {
         batteryExempt = true
-        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-        launcher.launch(intent)
     }
 
     override fun setNotificationAccessDenied(denied: Boolean) {

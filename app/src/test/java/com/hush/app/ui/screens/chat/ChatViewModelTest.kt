@@ -11,6 +11,7 @@ import com.hush.app.domain.model.Rule
 import com.hush.app.domain.model.RuleAction
 import com.hush.app.domain.permission.PermissionManager
 import com.hush.app.domain.repository.AIEngine
+import com.hush.app.domain.repository.AIStatus
 import com.hush.app.domain.repository.AppInfo
 import com.hush.app.domain.repository.PackageResolver
 import com.hush.app.domain.repository.RuleRepository
@@ -21,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -36,6 +38,11 @@ import java.time.LocalTime
 
 class LocalFakeAIEngine : AIEngine {
     var available = true
+    override val status: StateFlow<AIStatus> = MutableStateFlow(AIStatus.READY)
+    override val downloadProgress: StateFlow<Int> = MutableStateFlow(100)
+    override val errorMessage: StateFlow<String?> = MutableStateFlow(null)
+    override suspend fun downloadModel() {}
+    override suspend fun recheckAvailability() {}
     override fun isAvailable(): Boolean = available
     override suspend fun parseCommand(prompt: String): ParsedCommand {
         if (prompt == "malformed") {
@@ -125,7 +132,7 @@ class LocalFakePermissionManager : PermissionManager {
     override fun requestMicrophonePermission(launcher: ManagedActivityResultLauncher<String, Boolean>) {
         requestPermissionCalled = true
     }
-    override fun requestBatteryExemption(launcher: ManagedActivityResultLauncher<Intent, ActivityResult>) {}
+    override fun requestBatteryExemption(context: Context) {}
     override fun setNotificationAccessDenied(denied: Boolean) {}
 }
 
