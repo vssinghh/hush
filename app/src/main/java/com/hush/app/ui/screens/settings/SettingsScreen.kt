@@ -1,11 +1,7 @@
 package com.hush.app.ui.screens.settings
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
-import android.os.Build
 import androidx.compose.foundation.background
-import androidx.core.app.NotificationCompat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -35,6 +32,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.runtime.collectAsState
+import com.hush.app.domain.model.RuleAction
 import com.hush.app.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -264,38 +262,188 @@ fun SettingsScreen(
 
             SettingsDivider()
 
-            // Send Test Notification
+            // Rule Tester
+            var showRuleTester by remember { mutableStateOf(false) }
+            var selectedAppIndex by remember { mutableIntStateOf(-1) }
+            var testTitle by remember { mutableStateOf("") }
+            var testText by remember { mutableStateOf("") }
+            var testSender by remember { mutableStateOf("") }
+            var showAppDropdown by remember { mutableStateOf(false) }
+            val installedApps by viewModel.installedApps.collectAsState()
+            val testResult by viewModel.testResult.collectAsState()
+
             SettingsRow(
                 icon = Icons.Filled.PlayArrow,
                 iconTint = Color.White,
                 iconBackground = AccentTeal,
-                title = "Send Test Notification",
-                subtitle = "Fire a test notification to verify blocking",
+                title = "Rule Tester",
+                subtitle = "Simulate a notification to test your rules",
                 onClick = {
-                    val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                    val channelId = "hush_test_channel"
-                    if (nm.getNotificationChannel(channelId) == null) {
-                        nm.createNotificationChannel(
-                            NotificationChannel(channelId, "Hush Test", NotificationManager.IMPORTANCE_HIGH)
-                        )
-                    }
-                    val notification = NotificationCompat.Builder(context, channelId)
-                        .setSmallIcon(android.R.drawable.ic_dialog_info)
-                        .setContentTitle("Test: Mom")
-                        .setContentText("Hey, are you coming for dinner tonight?")
-                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                        .build()
-                    nm.notify(System.currentTimeMillis().toInt(), notification)
+                    showRuleTester = !showRuleTester
+                    if (!showRuleTester) viewModel.clearTestResult()
                 },
-                modifier = Modifier.testTag("settings_test_notification"),
+                modifier = Modifier.testTag("settings_rule_tester"),
                 trailing = {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        imageVector = if (showRuleTester)
+                            Icons.Filled.KeyboardArrowDown
+                        else
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             )
+
+            if (showRuleTester) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // App selector
+                    Box {
+                        OutlinedTextField(
+                            value = if (selectedAppIndex >= 0 && selectedAppIndex < installedApps.size)
+                                installedApps[selectedAppIndex].displayName
+                            else "",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("App") },
+                            placeholder = { Text("Select an app...") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showAppDropdown = true },
+                            enabled = false,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                        // Invisible clickable overlay
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showAppDropdown = true }
+                        )
+                        DropdownMenu(
+                            expanded = showAppDropdown,
+                            onDismissRequest = { showAppDropdown = false },
+                            modifier = Modifier.heightIn(max = 300.dp)
+                        ) {
+                            installedApps.forEachIndexed { index, app ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text(
+                                                text = app.displayName,
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                            Text(
+                                                text = app.packageName,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        selectedAppIndex = index
+                                        showAppDropdown = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Title field
+                    OutlinedTextField(
+                        value = testTitle,
+                        onValueChange = { testTitle = it },
+                        label = { Text("Title") },
+                        placeholder = { Text("e.g. Promotion Alert") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    // Text field
+                    OutlinedTextField(
+                        value = testText,
+                        onValueChange = { testText = it },
+                        label = { Text("Text / Body") },
+                        placeholder = { Text("e.g. 50% off today only!") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    // Sender field
+                    OutlinedTextField(
+                        value = testSender,
+                        onValueChange = { testSender = it },
+                        label = { Text("Sender") },
+                        placeholder = { Text("e.g. Mom, Bob") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    // Evaluate button
+                    Button(
+                        onClick = {
+                            if (selectedAppIndex >= 0 && selectedAppIndex < installedApps.size) {
+                                val app = installedApps[selectedAppIndex]
+                                viewModel.testRule(
+                                    packageName = app.packageName,
+                                    appName = app.displayName,
+                                    title = testTitle,
+                                    text = testText,
+                                    sender = testSender
+                                )
+                            }
+                        },
+                        enabled = selectedAppIndex >= 0,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AccentTeal
+                        )
+                    ) {
+                        Text("Evaluate Rules", fontWeight = FontWeight.SemiBold)
+                    }
+
+                    // Result display
+                    testResult?.let { result ->
+                        val (resultColor, resultBgColor) = when (result.action) {
+                            RuleAction.BLOCK -> AccentRed to AccentRedLight
+                            RuleAction.MUTE -> Color(0xFFD97706) to Color(0xFFFEF3C7)
+                            RuleAction.ALLOW -> AccentGreen to AccentGreenLight
+                        }
+                        Surface(
+                            shape = MaterialTheme.shapes.medium,
+                            color = resultBgColor,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "Verdict: ${result.action.name}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = resultColor
+                                )
+                                Text(
+                                    text = "A notification from ${result.appName} with these properties would be ${result.action.name.lowercase()}ed.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = resultColor.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
             SettingsDivider()
 
             // Reset Onboarding
