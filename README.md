@@ -1,124 +1,135 @@
-# Hush
+<p align="center">
+  <img src="docs/banner.png" alt="Hush Banner" width="100%">
+</p>
 
-Hush is a privacy-first conversational notification interceptor for Android. It runs entirely on-device, leveraging local artificial intelligence (Gemini Nano via Google AICore) and speech recognition to process natural language commands into custom notification filtering rules. All rule storage, notification processing, and execution history log data remain private to your device.
+<p align="center">
+  <strong>Talk to your phone. Silence the noise.</strong>
+</p>
 
----
-
-## Core Features
-
-- 💬 **Conversational Rule Creation**: Define rules in natural language (e.g., *"Block WhatsApp notifications containing 'spoilers' between 10 PM and 7 AM"*). A pipeline powered by Gemini Nano parses prompts into structured configuration rules.
-- 🎧 **Notification Listener Service (`HushNotificationListener`)**: Utilizes Android's `NotificationListenerService` API to intercept, read metadata from, and programmatically dismiss or mute notifications based on evaluated active rules.
-- ⚙️ **On-Device Rule Engine & Room Database**: An evaluation engine checks notification metadata (app package, title, text, sender, time windows, and inverted logic exceptions) and executes the corresponding action (`ALLOW`, `BLOCK`, or `MUTE`), storing rules and logs in a secure, local Room SQLite database.
-- 🎙️ **SpeechRecognizer Wrapper**: A clean interface wrapping Android's `SpeechRecognizer` API that reports status via a reactive Kotlin Coroutine StateFlow (Idle, Listening, Waveform Updates, Partial/Final Results, Errors), complemented by a voice input sheet featuring a dynamic audio amplitude waveform.
-- 🎨 **Material You & Jetpack Compose UI**: Features a modern, unified Compose UI implementing Material You dynamic color styling with five main screens:
-  - **Chat screen**: An interactive thread to create rules conversationally with text or voice.
-  - **Rules screen**: A repository to view details, toggle active states, or delete rules via swipe.
-  - **History screen**: A log viewer showing filtered notifications and applied rule reasons.
-  - **Settings screen**: A panel to manage permissions, theme overrides, and database retention pruning.
-  - **Onboarding flow**: A guided first-run experience detailing and requesting necessary Android system permissions.
+<p align="center">
+  <a href="#getting-started"><img src="https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white" alt="Platform"></a>
+  <a href="#getting-started"><img src="https://img.shields.io/badge/Min_SDK-33_(Android_13)-6750A4" alt="Min SDK"></a>
+  <a href="#getting-started"><img src="https://img.shields.io/badge/Target_SDK-35_(Android_15)-6750A4" alt="Target SDK"></a>
+  <a href="#tech-stack"><img src="https://img.shields.io/badge/AI-Gemini_Nano-4285F4?logo=google&logoColor=white" alt="AI Engine"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue" alt="License"></a>
+</p>
 
 ---
 
-## Clean Architecture & Package Structure
+Hush is a privacy-first notification filtering app for Android. Define rules in plain English — by typing or speaking — and Hush uses on-device AI (Gemini Nano) to parse your intent into structured rules that automatically block, mute, or allow notifications. Everything runs locally. No cloud. No data leaves your device.
 
-The codebase is organized according to Clean Architecture principles to decouple business logic from framework details.
+---
 
-```
-com.hush.app/
-│
-├── di/                     # Dependency Injection modules (Hilt)
-│   ├── AIModule.kt         # Binds AIEngine
-│   ├── DatabaseModule.kt   # Provides Room Database, RuleDao, and NotificationLogDao instances
-│   ├── PermissionModule.kt # Binds PermissionManager
-│   ├── PreferencesModule.kt# Provides OnboardingPrefs
-│   └── RepositoryModule.kt # Binds Repository implementations
-│
-├── domain/                 # Business Logic & Core Interfaces (Pure Kotlin)
-│   ├── model/              # Domain models and enums
-│   │   ├── Rule.kt         # Rule data class, RuleAction, MatchField, MatchType enums
-│   │   ├── NotificationEvent.kt # Notification log data class
-│   │   └── ParsedCommand.kt # AI-parsed command representation
-│   ├── permission/         # Permission-related interfaces
-│   │   └── PermissionManager.kt
-│   ├── repository/         # Repository interfaces & State definitions
-│   │   ├── AIEngine.kt
-│   │   ├── HistoryRepository.kt
-│   │   ├── PackageResolver.kt
-│   │   ├── RuleRepository.kt
-│   │   ├── SpeechRecognizerWrapper.kt
-│   │   └── SpeechState.kt  # Sealed interface representing speech input states
-│   └── usecase/            # Use cases encapsulating business logic
-│       ├── EvaluateNotificationUseCase.kt # Matches notifications against active rules
-│       └── ParseCommandUseCase.kt         # Feeds natural language prompt to AIEngine
-│
-├── data/                   # Data Access & Concrete Implementations
-│   ├── db/                 # Room DB Setup
-│   │   ├── HushDatabase.kt
-│   │   └── RoomConverters.kt
-│   │   ├── dao/            # Room DAOs
-│   │   │   ├── NotificationLogDao.kt
-│   │   │   └── RuleDao.kt
-│   │   └── entity/         # Room Entities
-│   │       ├── NotificationLogEntity.kt
-│   │       └── RuleEntity.kt
-│   ├── pref/               # SharedPreferences
-│   │   └── OnboardingPrefs.kt
-│   └── repository/         # Data Repositories & Engine Implementations
-│       ├── AIEngineImpl.kt # Implements AIEngine via Google AI Client (Gemini Nano)
-│       ├── HistoryRepositoryImpl.kt
-│       ├── PackageResolverImpl.kt
-│       ├── PermissionManagerImpl.kt
-│       ├── PromptTemplates.kt
-│       ├── RuleRepositoryImpl.kt
-│       └── SpeechRecognizerWrapperImpl.kt # Implements SpeechRecognizerWrapper using Android Speech APIs
-│
-├── service/                # Android Services
-│   └── HushNotificationListener.kt # Intercepts notifications using NotificationListenerService
-│
-└── ui/                     # Presentation Layer (Jetpack Compose UI)
-    ├── navigation/         # NavGraph and Routes
-    │   ├── HushNavigation.kt
-    │   └── ScreenRoute.kt
-    ├── screens/            # UI Screens & ViewModels
-    │   ├── MainScreen.kt
-    │   ├── chat/           # Conversational Chat Screen
-    │   │   ├── ChatScreen.kt
-    │   │   └── ChatViewModel.kt
-    │   ├── history/        # History Logs Screen
-    │   │   ├── HistoryScreen.kt
-    │   │   └── HistoryViewModel.kt
-    │   ├── onboarding/     # Onboarding Setup Screen
-    │   │   ├── OnboardingScreen.kt
-    │   │   └── OnboardingViewModel.kt
-    │   ├── rules/          # Rules List & Details Screen
-    │   │   ├── RulesScreen.kt
-    │   │   └── RulesViewModel.kt
-    │   └── settings/       # Settings/Preferences Screen
-    │       ├── SettingsScreen.kt
-    │       └── SettingsViewModel.kt
-    └── theme/              # Material 3 Theming
-        ├── Color.kt
-        ├── Theme.kt
-        └── Type.kt
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/chat.png" width="24%" alt="Chat Screen">
+  <img src="docs/screenshots/chat_rule_creation.png" width="24%" alt="Rule Creation">
+  <img src="docs/screenshots/rules.png" width="24%" alt="Rules Screen">
+  <img src="docs/screenshots/rule_detail.png" width="24%" alt="Rule Detail">
+</p>
+
+<p align="center">
+  <em>Chat · Rule Creation · Rules Management · Rule Detail</em>
+</p>
+
+---
+
+## Features
+
+### For Users
+
+- 💬 **Natural language rules** — Say *"Mute WhatsApp notifications except from Bob"* and Hush creates the rule for you
+- 🎙️ **Voice input** — Tap the mic and speak your command; a live waveform shows it's listening
+- 🔕 **Three actions** — Block (dismiss), Mute (silence), or Allow notifications per rule
+- 🔄 **Inverted logic** — Create exception-based rules like *"Block all from Gmail except @company.com"*
+- ⏰ **Time windows** — Schedule rules to activate only during specific hours (e.g., 10 PM – 7 AM)
+- 📋 **History log** — See every notification that was filtered and which rule triggered it
+- 🧪 **Rule Tester** — Simulate notifications in Settings to verify rules work before going live
+- 🔒 **Fully private** — No internet required. AI runs on-device via Gemini Nano through Google AICore
+
+### For Developers
+
+- 🧱 **Clean Architecture** — Domain, Data, and Presentation layers with clear dependency boundaries
+- 💉 **Hilt DI** — Full dependency injection with modular Hilt modules
+- 🗄️ **Room Database** — Type-safe persistence for rules and notification history
+- 🎨 **Jetpack Compose** — Declarative UI with Material 3 / Material You dynamic theming
+- 🤖 **On-device AI** — Gemini Nano integration via Google AI Client SDK for natural language parsing
+
+---
+
+## How It Works
+
+```mermaid
+flowchart LR
+    A["🗣️ User Command"] --> B["🤖 Gemini Nano\n(On-Device)"]
+    B --> C["📋 Parsed Rule"]
+    C --> D["🗄️ Room DB"]
+    D --> E["🔔 Notification\nArrives"]
+    E --> F["⚙️ Rule Engine"]
+    F --> G{"Match?"}
+    G -->|Yes| H["🔕 Block / Mute"]
+    G -->|No| I["✅ Allow"]
 ```
 
+1. **You speak or type** a filtering command in natural language
+2. **Gemini Nano** (running locally via AICore) parses it into a structured rule
+3. **The rule is stored** in a local Room database
+4. **When a notification arrives**, the `NotificationListenerService` intercepts it
+5. **The rule engine** evaluates it against all active rules (package, title, body, sender, time, inverted matches)
+6. **Action is taken** — block, mute, or allow — and the result is logged to history
+
 ---
 
-## Build Setup
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Language** | Kotlin |
+| **UI** | Jetpack Compose + Material 3 |
+| **AI** | Gemini Nano via Google AICore |
+| **Database** | Room (SQLite) |
+| **DI** | Hilt / Dagger |
+| **Architecture** | Clean Architecture (Domain → Data → UI) |
+| **Speech** | Android SpeechRecognizer API |
+| **Async** | Kotlin Coroutines + StateFlow |
+| **Min SDK** | 33 (Android 13) |
+| **Target SDK** | 35 (Android 15) |
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
 - **JDK 17**
 - **Android SDK Platform 35**
-- Minimum SDK support: **Android 13 (API level 33)**
-- Target SDK support: **Android 15 (API level 35)**
+- A physical device with **Gemini Nano** support (Pixel 6 or newer recommended)
+  - AICore must be installed and the Gemini Nano model downloaded on-device
+
+### Build & Run
+
+```bash
+# Clone the repository
+git clone https://github.com/vssinghh/hush.git
+cd hush
+
+# Build the debug APK
+./gradlew assembleDebug
+
+# Install on a connected device
+./gradlew installDebug
+```
 
 ### Dependency Resolution
 
-To support reproducible, isolated builds without requiring external network connections during build-time, Hush resolves all third-party dependencies from a local Maven repository located under the `repo/` directory in the project root.
+Hush resolves dependencies from a local Maven repository (`repo/`) for reproducible offline builds:
 
-In `settings.gradle.kts`, the resolution is configured as follows:
+<details>
+<summary>View Gradle configuration</summary>
+
 ```kotlin
+// settings.gradle.kts
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -129,35 +140,103 @@ dependencyResolutionManagement {
 }
 ```
 
-To build the project, run:
-```bash
-./gradlew assembleDebug
-```
+</details>
 
 ---
 
-## Testing Guidelines
+## Permissions
+
+Hush requests the following Android permissions during onboarding:
+
+| Permission | Required | Why |
+|-----------|----------|-----|
+| **Notification Listener** | ✅ Mandatory | Read and dismiss/mute incoming notifications |
+| **Microphone** | Optional | Voice input for conversational rule creation |
+| **Battery Optimization Exemption** | Optional | Keep the notification listener alive in the background |
+
+> All permissions are explained in the onboarding flow and can be managed in system settings at any time.
+
+---
+
+## Architecture
+
+Hush follows **Clean Architecture** principles with three layers:
+
+```
+┌─────────────────────────────────────────────┐
+│  UI Layer (Jetpack Compose + ViewModels)    │
+├─────────────────────────────────────────────┤
+│  Domain Layer (Use Cases + Interfaces)      │
+├─────────────────────────────────────────────┤
+│  Data Layer (Room DB + AI Engine + Repos)   │
+└─────────────────────────────────────────────┘
+```
+
+- **Domain** — Pure Kotlin. Models (`Rule`, `NotificationEvent`, `ParsedCommand`), repository interfaces, and use cases (`EvaluateNotificationUseCase`, `ParseCommandUseCase`). No Android dependencies.
+- **Data** — Concrete implementations. Room database with DAOs and entities, `AIEngineImpl` (Gemini Nano), `SpeechRecognizerWrapperImpl`, and all repository implementations.
+- **UI** — Jetpack Compose screens (Chat, Rules, History, Settings, Onboarding) with ViewModels exposing state via `StateFlow`.
+- **Service** — `HushNotificationListener` bridges Android's `NotificationListenerService` with the domain layer.
+- **DI** — Hilt modules wire everything together.
+
+📖 **[Full package structure →](docs/ARCHITECTURE.md)**
+
+---
+
+## Testing
 
 ### Unit Tests
-
-Unit tests target individual layers and components in isolation using mocks or fakes. Run them via the command line:
 
 ```bash
 ./gradlew testDebugUnitTest
 ```
 
-#### Test Class Mapping
-
-- **`AIEngineImplTest`**: Verifies local JSON parsing, clean-up operations, time format robust parsing, input validation, and expected exceptions when AI is unavailable.
-- **`EvaluateNotificationUseCaseTest`**: Tests rule evaluation logic in detail. Includes boundary conditions (e.g. daytime windows, overnight time windows, package-level filters, exact/regex/contains matching fields, negation / inverted rules) to ensure correct actions (`ALLOW`, `BLOCK`, `MUTE`) are chosen.
-- **`ParseCommandUseCaseTest`**: Validates the end-to-end command parsing pipeline, verifying app package name resolution mapping and correct exception throwing for empty or malformed inputs.
-- **`ChatViewModelTest`**: Tests presentation logic, conversational state transitions (e.g., idle, typing, recording voice, confirmation dialog display), Hilt module mocks integration, and rule confirmation or cancellation effects.
+| Test Class | Coverage |
+|-----------|----------|
+| `AIEngineImplTest` | JSON parsing, time format handling, input validation, error cases |
+| `EvaluateNotificationUseCaseTest` | Rule matching: time windows, package filters, exact/regex/contains, inverted rules |
+| `ParseCommandUseCaseTest` | End-to-end command parsing, package resolution, malformed input handling |
+| `ChatViewModelTest` | State transitions, voice recording flow, rule confirmation/cancellation |
 
 ### Instrumented Tests (E2E)
 
-End-to-End instrumented tests run on physical devices or Android emulators to verify the full user flows, database persistence, and system-level interception.
-
-Run Android instrumented tests with:
 ```bash
 ./gradlew connectedAndroidTest
+```
+
+Runs on physical devices or emulators to verify full user flows, database persistence, and notification interception.
+
+### Rule Tester (Manual)
+
+The built-in **Rule Tester** in Settings lets you simulate notifications with custom app, title, body, and sender fields to verify rule matching without waiting for real notifications.
+
+---
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -m 'feat: add my feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Open a Pull Request
+
+---
+
+## License
+
+```
+Copyright 2025 Vipin Singh
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 ```
