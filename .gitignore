@@ -7,6 +7,9 @@ build-stub/
 
 # Local developer configuration
 local.properties
+keystore.properties
+*.jks
+*.keystore
 
 # IDE files
 .idea/
