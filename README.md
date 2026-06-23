@@ -14,9 +14,20 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue" alt="License"></a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/vssinghh/hush/stargazers"><img src="https://img.shields.io/github/stars/vssinghh/hush?style=flat&logo=github&color=FAD02C" alt="GitHub Stars"></a>
+  <a href="https://github.com/vssinghh/hush/network/members"><img src="https://img.shields.io/github/forks/vssinghh/hush?style=flat&logo=github&color=007acc" alt="GitHub Forks"></a>
+  <a href="https://github.com/vssinghh/hush/graphs/contributors"><img src="https://img.shields.io/github/contributors/vssinghh/hush?style=flat&color=orange" alt="Contributors"></a>
+  <a href="https://github.com/vssinghh/hush/issues"><img src="https://img.shields.io/github/issues/vssinghh/hush?style=flat" alt="Issues"></a>
+</p>
+
 ---
 
 Hush is a privacy-first notification filtering app for Android. Define rules in plain English — by typing or speaking — and Hush uses on-device AI (Gemini Nano) to parse your intent into structured rules that automatically block, mute, or allow notifications. Everything runs locally. No cloud. No data leaves your device.
+
+<p align="center">
+  <strong>⭐ Support the Project: If you find Hush useful or appreciate local AI privacy, please star this repository! It helps more developers discover the project. ⭐</strong>
+</p>
 
 ---
 
@@ -99,6 +110,13 @@ flowchart LR
 ---
 
 ## Getting Started
+
+### 📲 Quick Install
+
+If you are a user and just want to try out the app:
+1. Head over to the **[Releases](https://github.com/vssinghh/hush/releases)** section.
+2. Download the latest pre-compiled APK.
+3. Install it on your Gemini Nano supported Android device.
 
 ### Prerequisites
 
@@ -226,7 +244,7 @@ Contributions are welcome! Please:
 ## License
 
 ```
-Copyright 2025 Vipin Singh
+Copyright 2025 Hush Contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
