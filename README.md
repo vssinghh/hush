@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong>Talk to your phone. Silence the noise.</strong>
+  <em>An Android app that lets you control notifications by talking to your phone.</em>
 </p>
 
 <p align="center">
@@ -23,11 +23,7 @@
 
 ---
 
-Hush is a privacy-first notification filtering app for Android. Define rules in plain English — by typing or speaking — and Hush uses on-device AI (Gemini Nano) to parse your intent into structured rules that automatically block, mute, or allow notifications. Everything runs locally. No cloud. No data leaves your device.
-
-<p align="center">
-  <strong>⭐ Support the Project: If you find Hush useful or appreciate local AI privacy, please star this repository! It helps more developers discover the project. ⭐</strong>
-</p>
+I built Hush because Android's notification settings are buried and rigid. With Hush you just type or say what you want — *"mute Slack after 10pm"* — and on-device AI (Gemini Nano) turns it into a real filtering rule. No cloud, no data leaves your phone. Everything runs locally through Google AICore.
 
 ---
 
@@ -48,24 +44,14 @@ Hush is a privacy-first notification filtering app for Android. Define rules in 
 
 ## Features
 
-### For Users
-
-- 💬 **Natural language rules** — Say *"Mute WhatsApp notifications except from Bob"* and Hush creates the rule for you
-- 🎙️ **Voice input** — Tap the mic and speak your command; a live waveform shows it's listening
-- 🔕 **Three actions** — Block (dismiss), Mute (silence), or Allow notifications per rule
-- 🔄 **Inverted logic** — Create exception-based rules like *"Block all from Gmail except @company.com"*
-- ⏰ **Time windows** — Schedule rules to activate only during specific hours (e.g., 10 PM – 7 AM)
-- 📋 **History log** — See every notification that was filtered and which rule triggered it
-- 🧪 **Rule Tester** — Simulate notifications in Settings to verify rules work before going live
-- 🔒 **Fully private** — No internet required. AI runs on-device via Gemini Nano through Google AICore
-
-### For Developers
-
-- 🧱 **Clean Architecture** — Domain, Data, and Presentation layers with clear dependency boundaries
-- 💉 **Hilt DI** — Full dependency injection with modular Hilt modules
-- 🗄️ **Room Database** — Type-safe persistence for rules and notification history
-- 🎨 **Jetpack Compose** — Declarative UI with Material 3 / Material You dynamic theming
-- 🤖 **On-device AI** — Gemini Nano integration via Google AI Client SDK for natural language parsing
+- **Natural language rules.** Tell Hush *"Mute WhatsApp notifications except from Bob"* and it builds the rule for you.
+- **Voice input.** Tap the mic, say what you want. A live waveform confirms it's listening.
+- **Block, Mute, or Allow** — three actions per rule.
+- **Inverted / exception rules.** *"Block all from Gmail except @company.com"* works exactly how you'd expect.
+- **Time windows** so rules only fire during certain hours (e.g., 10 PM – 7 AM).
+- Full **notification history** — see what got filtered and which rule matched.
+- Built-in **Rule Tester** to simulate notifications before going live.
+- **100% on-device.** No internet, no cloud. AI runs locally through Gemini Nano / AICore.
 
 ---
 
@@ -83,19 +69,19 @@ flowchart LR
     G -->|No| I["✅ Allow"]
 ```
 
-1. **You speak or type** a filtering command in natural language
-2. **Gemini Nano** (running locally via AICore) parses it into a structured rule
-3. **The rule is stored** in a local Room database
-4. **When a notification arrives**, the `NotificationListenerService` intercepts it
-5. **The rule engine** evaluates it against all active rules (package, title, body, sender, time, inverted matches)
-6. **Action is taken** — block, mute, or allow — and the result is logged to history
+1. You type or say a filtering command in plain English.
+2. Gemini Nano parses it into a structured rule (runs locally via AICore).
+3. The rule gets saved to a Room database.
+4. When a notification comes in, `NotificationListenerService` picks it up.
+5. The rule engine checks it against active rules — package, title, body, sender, time, inverted matches.
+6. Matched? Block or mute it. Not matched? Let it through. Either way, the result gets logged.
 
 ---
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
+|-------|------------|
 | **Language** | Kotlin |
 | **UI** | Jetpack Compose + Material 3 |
 | **AI** | Gemini Nano via Google AICore |
@@ -111,12 +97,12 @@ flowchart LR
 
 ## Getting Started
 
-### 📲 Quick Install
+### Quick Install
 
-If you are a user and just want to try out the app:
-1. Head over to the **[Releases](https://github.com/vssinghh/hush/releases)** section.
-2. Download the latest pre-compiled APK.
-3. Install it on your Gemini Nano supported Android device.
+Just want to try the app?
+
+1. Grab the latest APK from **[Releases](https://github.com/vssinghh/hush/releases)**.
+2. Install it on a Gemini Nano supported Android device (Pixel 6+).
 
 ### Prerequisites
 
@@ -141,7 +127,7 @@ cd hush
 
 ### Dependency Resolution
 
-Hush resolves dependencies from a local Maven repository (`repo/`) for reproducible offline builds:
+Hush ships a local Maven repository (`repo/`) so builds are reproducible and work offline.
 
 <details>
 <summary>View Gradle configuration</summary>
@@ -164,21 +150,19 @@ dependencyResolutionManagement {
 
 ## Permissions
 
-Hush requests the following Android permissions during onboarding:
-
 | Permission | Required | Why |
 |-----------|----------|-----|
 | **Notification Listener** | ✅ Mandatory | Read and dismiss/mute incoming notifications |
-| **Microphone** | Optional | Voice input for conversational rule creation |
-| **Battery Optimization Exemption** | Optional | Keep the notification listener alive in the background |
+| **Microphone** | Optional | Voice input for creating rules |
+| **Battery Optimization Exemption** | Optional | Keeps the notification listener alive in the background |
 
-> All permissions are explained in the onboarding flow and can be managed in system settings at any time.
+All permissions are explained during onboarding. You can change them in system settings at any time.
 
 ---
 
 ## Architecture
 
-Hush follows **Clean Architecture** principles with three layers:
+The app follows Clean Architecture with three layers:
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -190,11 +174,11 @@ Hush follows **Clean Architecture** principles with three layers:
 └─────────────────────────────────────────────┘
 ```
 
-- **Domain** — Pure Kotlin. Models (`Rule`, `NotificationEvent`, `ParsedCommand`), repository interfaces, and use cases (`EvaluateNotificationUseCase`, `ParseCommandUseCase`). No Android dependencies.
-- **Data** — Concrete implementations. Room database with DAOs and entities, `AIEngineImpl` (Gemini Nano), `SpeechRecognizerWrapperImpl`, and all repository implementations.
-- **UI** — Jetpack Compose screens (Chat, Rules, History, Settings, Onboarding) with ViewModels exposing state via `StateFlow`.
-- **Service** — `HushNotificationListener` bridges Android's `NotificationListenerService` with the domain layer.
-- **DI** — Hilt modules wire everything together.
+- **Domain** — Pure Kotlin. Models (`Rule`, `NotificationEvent`, `ParsedCommand`), repository interfaces, and use cases like `EvaluateNotificationUseCase`. No Android dependencies.
+- **Data** — Room database, `AIEngineImpl` (wraps Gemini Nano), speech recognizer, and all the repo implementations.
+- **UI** — Compose screens (Chat, Rules, History, Settings, Onboarding) backed by ViewModels with `StateFlow`.
+- **Service** — `HushNotificationListener` hooks into Android's `NotificationListenerService`.
+- **DI** — Hilt wires everything together.
 
 📖 **[Full package structure →](docs/ARCHITECTURE.md)**
 
@@ -208,8 +192,8 @@ Hush follows **Clean Architecture** principles with three layers:
 ./gradlew testDebugUnitTest
 ```
 
-| Test Class | Coverage |
-|-----------|----------|
+| Test Class | What it covers |
+|-----------|------------|
 | `AIEngineImplTest` | JSON parsing, time format handling, input validation, error cases |
 | `EvaluateNotificationUseCaseTest` | Rule matching: time windows, package filters, exact/regex/contains, inverted rules |
 | `ParseCommandUseCaseTest` | End-to-end command parsing, package resolution, malformed input handling |
@@ -221,19 +205,19 @@ Hush follows **Clean Architecture** principles with three layers:
 ./gradlew connectedAndroidTest
 ```
 
-Runs on physical devices or emulators to verify full user flows, database persistence, and notification interception.
+Runs on a physical device or emulator. Covers user flows, database persistence, and notification interception.
 
 ### Rule Tester (Manual)
 
-The built-in **Rule Tester** in Settings lets you simulate notifications with custom app, title, body, and sender fields to verify rule matching without waiting for real notifications.
+There's a built-in Rule Tester under Settings. You can plug in a custom app name, title, body, and sender to see which rules would match — no need to wait for a real notification.
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! Here's the usual flow:
 
-1. Fork the repository
+1. Fork the repo
 2. Create a feature branch (`git checkout -b feature/my-feature`)
 3. Commit your changes (`git commit -m 'feat: add my feature'`)
 4. Push to the branch (`git push origin feature/my-feature`)
