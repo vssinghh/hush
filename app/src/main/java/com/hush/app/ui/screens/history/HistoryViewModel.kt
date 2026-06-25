@@ -8,6 +8,7 @@ import com.hush.app.domain.repository.HistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -66,5 +67,11 @@ class HistoryViewModel @Inject constructor(
 
     fun setSelectedTab(tab: String) {
         _selectedTab.value = tab
+    }
+
+    fun clearAll() {
+        viewModelScope.launch {
+            historyRepository.clearAllLogs()
+        }
     }
 }
