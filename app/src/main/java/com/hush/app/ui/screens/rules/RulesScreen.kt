@@ -47,7 +47,7 @@ fun RulesScreen(
 ) {
     val rulesList by viewModel.rulesList.collectAsState()
     var selectedRule by remember { mutableStateOf<Rule?>(null) }
-
+    var rulePendingDeletion by remember { mutableStateOf<Rule?>(null) }
     Surface(
         modifier = modifier
             .fillMaxSize()
@@ -106,8 +106,8 @@ fun RulesScreen(
                         val dismissState = rememberSwipeToDismissBoxState(
                             confirmValueChange = { dismissValue ->
                                 if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
-                                    viewModel.deleteRule(rule)
-                                    true
+                                    rulePendingDeletion=rule
+                                    false
                                 } else {
                                     false
                                 }
@@ -265,8 +265,7 @@ fun RulesScreen(
                     // Delete button
                     OutlinedButton(
                         onClick = {
-                            viewModel.deleteRule(rule)
-                            selectedRule = null
+                            rulePendingDeletion=rule
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -304,6 +303,50 @@ fun RulesScreen(
                 }
             },
             modifier = Modifier.testTag("rule_detail_dialog")
+
+        )
+    }
+    if (rulePendingDeletion != null) {
+        val rule = rulePendingDeletion!!
+
+        AlertDialog(
+            onDismissRequest = {
+                rulePendingDeletion = null
+            },
+            title = {
+                Text("Delete rule?")
+            },
+            text = {
+                Column {
+                    Text(rule.name)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("This action cannot be undone.")
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteRule(rule)
+
+                        if (selectedRule?.id == rule.id) {
+                            selectedRule = null
+                        }
+
+                        rulePendingDeletion = null
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        rulePendingDeletion = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 }
