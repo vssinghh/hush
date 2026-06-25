@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -36,6 +37,7 @@ fun HistoryScreen(
     val historyLogs by viewModel.historyLogs.collectAsState()
 
     var selectedLog by remember { mutableStateOf<NotificationEvent?>(null) }
+    var showClearDialog by remember { mutableStateOf(false) }
     val timeFormatter = remember {
         DateTimeFormatter.ofPattern("hh:mm a").withZone(ZoneId.systemDefault())
     }
@@ -48,31 +50,49 @@ fun HistoryScreen(
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ── Search Input ──
-        TextField(
-            value = searchQuery,
-            onValueChange = { viewModel.setSearchQuery(it) },
-            placeholder = { Text("Search notifications...") },
-            leadingIcon = {
+        // ── Search Input + Clear All ──
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TextField(
+                value = searchQuery,
+                onValueChange = { viewModel.setSearchQuery(it) },
+                placeholder = { Text("Search notifications...") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("history_search_input"),
+                singleLine = true,
+                shape = RoundedCornerShape(24.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent
+                )
+            )
+
+            IconButton(
+                onClick = { showClearDialog = true },
+                enabled = historyLogs.isNotEmpty(),
+                modifier = Modifier.testTag("history_clear_button")
+            ) {
                 Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Clear all history",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("history_search_input"),
-            singleLine = true,
-            shape = RoundedCornerShape(24.dp),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent
-            )
-        )
+            }
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -126,6 +146,29 @@ fun HistoryScreen(
                 }
             },
             modifier = Modifier.testTag("history_detail_dialog")
+        )
+    }
+
+    // ── Clear All Confirmation Dialog ──
+    if (showClearDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDialog = false },
+            title = { Text("Clear all history?") },
+            text = { Text("This will permanently delete all notification logs.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.clearAll()
+                    showClearDialog = false
+                }) {
+                    Text("Clear")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+            modifier = Modifier.testTag("history_clear_dialog")
         )
     }
 }
