@@ -35,7 +35,7 @@ fun HistoryScreen(
 ) {
     val searchQuery by viewModel.searchQuery.collectAsState()
     val historyLogs by viewModel.historyLogs.collectAsState()
-
+    val selectedFilter by viewModel.selectedFilter.collectAsState()
     var selectedLog by remember { mutableStateOf<NotificationEvent?>(null) }
     var showClearDialog by remember { mutableStateOf(false) }
     val timeFormatter = remember {
@@ -95,7 +95,41 @@ fun HistoryScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
 
+            FilterChip(
+                selected = selectedFilter == RuleAction.BLOCK,
+                onClick = {
+                    viewModel.toggleFilter(RuleAction.BLOCK)
+                },
+                label = {
+                    Text("Blocked")
+                }
+            )
+
+            FilterChip(
+                selected = selectedFilter == RuleAction.MUTE,
+                onClick = {
+                    viewModel.toggleFilter(RuleAction.MUTE)
+                },
+                label = {
+                    Text("Muted")
+                }
+            )
+
+            FilterChip(
+                selected = selectedFilter == RuleAction.ALLOW,
+                onClick = {
+                    viewModel.toggleFilter(RuleAction.ALLOW)
+                },
+                label = {
+                    Text("Delivered")
+                }
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
         // ── Logs List ──
         LazyColumn(
             modifier = Modifier
