@@ -1,35 +1,46 @@
 package com.hush.app.ui.screens.onboarding
 
-import android.Manifest
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
-import android.os.PowerManager
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.BatteryChargingFull
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-
-import androidx.hilt.navigation.compose.hiltViewModel
+import com.hush.app.ui.components.HushGradient
+import com.hush.app.ui.theme.AccentGreen
+import com.hush.app.ui.theme.AccentPurple
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,8 +77,6 @@ fun OnboardingScreen(
         viewModel.refreshPermissions()
     }
 
-    // Battery Optimization — launch directly, ON_RESUME will refresh permissions
-
     // Warning Dialog for Battery Optimization Denial
     if (showBatteryWarning) {
         AlertDialog(
@@ -87,12 +96,8 @@ fun OnboardingScreen(
     }
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Welcome to Hush") }
-            )
-        },
-        modifier = modifier.testTag("onboarding_screen")
+        modifier = modifier.testTag("onboarding_screen"),
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -134,9 +139,9 @@ fun OnboardingScreen(
                             },
                             onRequestBattery = {
                                 viewModel.requestBatteryExemption(context)
-                            },
-                            onRequestDenyNotification = {
-                                viewModel.denyNotificationAccess()
+                                // If the exemption still isn't granted, gently
+                                // explain why it helps (battery is optional).
+                                if (!viewModel.isBatteryExempt) showBatteryWarning = true
                             },
                             onNext = { currentStep = 2 },
                             canProceed = viewModel.hasNotificationAccess && !viewModel.isNotificationAccessDenied,
@@ -149,29 +154,28 @@ fun OnboardingScreen(
                 }
             }
 
-            // Step Indicator dots
+            // Step Indicator — animated pill for the active step
             Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(top = 20.dp)
             ) {
                 repeat(3) { index ->
-                    val color = if (index == currentStep) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                    }
+                    val isActive = index == currentStep
+                    val width by animateDpAsState(
+                        targetValue = if (isActive) 28.dp else 8.dp,
+                        animationSpec = tween(300),
+                        label = "dot_width_$index"
+                    )
                     Box(
                         modifier = Modifier
-                            .size(10.dp)
-                            .padding(2.dp)
-                            .weight(1f, false)
-                    ) {
-                        Surface(
-                            shape = MaterialTheme.shapes.extraSmall,
-                            color = color,
-                            modifier = Modifier.fillMaxSize()
-                        ) {}
-                    }
+                            .height(8.dp)
+                            .width(width)
+                            .clip(CircleShape)
+                            .background(
+                                if (isActive) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f)
+                            )
+                    )
                 }
             }
         }
@@ -180,30 +184,117 @@ fun OnboardingScreen(
 
 @Composable
 fun ColumnScope.WelcomeStep(onNext: () -> Unit) {
+    // Springy hero entrance
+    var appeared by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { appeared = true }
+    val heroScale by animateFloatAsState(
+        targetValue = if (appeared) 1f else 0.6f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "hero_scale"
+    )
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.weight(1f)
     ) {
+        Box(
+            modifier = Modifier
+                .size(104.dp)
+                .graphicsLayer {
+                    scaleX = heroScale
+                    scaleY = heroScale
+                }
+                .clip(RoundedCornerShape(32.dp))
+                .background(HushGradient),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.NotificationsOff,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(52.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(28.dp))
         Text(
-            text = "Privacy-first notification filtering",
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Hush runs fully on-device, using Gemini Nano to understand your commands. Block, allow, or mute notifications without compromising your data.",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
+            text = "Hush",
+            style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.onBackground
         )
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Control notifications by simply\ntalking to your phone",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(36.dp))
+
+        FeatureRow(
+            icon = Icons.Outlined.AutoAwesome,
+            title = "Natural language rules",
+            description = "\"Mute Slack after 10pm\" — done."
+        )
+        Spacer(modifier = Modifier.height(14.dp))
+        FeatureRow(
+            icon = Icons.Outlined.Lock,
+            title = "100% private",
+            description = "Gemini Nano runs on-device. Nothing leaves your phone."
+        )
+        Spacer(modifier = Modifier.height(14.dp))
+        FeatureRow(
+            icon = Icons.Outlined.Schedule,
+            title = "Time-aware filtering",
+            description = "Rules that only fire when you need quiet."
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
         Button(
             onClick = onNext,
-            modifier = Modifier.testTag("onboarding_next_button")
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp)
+                .testTag("onboarding_next_button"),
+            shape = RoundedCornerShape(27.dp)
         ) {
-            Text("Get Started")
+            Text("Get Started", style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+@Composable
+private fun FeatureRow(icon: ImageVector, title: String, description: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(AccentPurple.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = AccentPurple,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Column {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -216,48 +307,59 @@ fun ColumnScope.PermissionsStep(
     onRequestNotification: () -> Unit,
     onRequestMicrophone: () -> Unit,
     onRequestBattery: () -> Unit,
-    onRequestDenyNotification: () -> Unit,
     onNext: () -> Unit,
     canProceed: Boolean,
     showDenyRationale: Boolean
 ) {
     Column(
         verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.weight(1f)
     ) {
         Text(
-            text = "Configure Permissions",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 16.dp),
-            textAlign = TextAlign.Center
+            text = "A few permissions",
+            style = MaterialTheme.typography.headlineMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onBackground
         )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "Hush needs these to quiet things down.",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(28.dp))
 
         // 1. Notification Access
         PermissionRow(
-            title = "Notification Interception",
-            description = "Allows Hush to read and filter notifications. (Mandatory)",
+            icon = Icons.Filled.Notifications,
+            title = "Notification access",
+            description = "Read and filter incoming notifications. Required.",
             isGranted = hasNotificationAccess,
             onRequest = onRequestNotification,
             buttonTag = "onboarding_grant_notification"
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // 2. Microphone
         PermissionRow(
-            title = "Microphone Access",
-            description = "Enables natural language voice commands. (Optional)",
+            icon = Icons.Filled.Mic,
+            title = "Microphone",
+            description = "Speak your rules out loud. Optional.",
             isGranted = hasMicrophonePermission,
             onRequest = onRequestMicrophone,
             buttonTag = "onboarding_grant_mic"
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // 3. Battery Exclusion
         PermissionRow(
-            title = "Keep App Alive",
-            description = "Exempts Hush from battery restrictions so it runs in the background. (Optional)",
+            icon = Icons.Outlined.BatteryChargingFull,
+            title = "Keep app alive",
+            description = "Skip battery limits so filtering never sleeps. Optional.",
             isGranted = isBatteryExempt,
             onRequest = onRequestBattery,
             buttonTag = "onboarding_ignore_battery"
@@ -269,17 +371,18 @@ fun ColumnScope.PermissionsStep(
             onClick = onNext,
             enabled = canProceed,
             modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .testTag("onboarding_next_button")
+                .fillMaxWidth()
+                .height(54.dp)
+                .testTag("onboarding_next_button"),
+            shape = RoundedCornerShape(27.dp)
         ) {
-            Text("Continue")
+            Text("Continue", style = MaterialTheme.typography.labelLarge)
         }
 
         AnimatedVisibility(
             visible = showDenyRationale,
             enter = fadeIn(tween(500)),
-            exit = fadeOut(tween(500)),
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            exit = fadeOut(tween(500))
         ) {
             Text(
                 text = "Grant notification access to continue",
@@ -299,10 +402,12 @@ fun PermissionRow(
     description: String,
     isGranted: Boolean,
     onRequest: () -> Unit,
-    buttonTag: String? = null
+    buttonTag: String? = null,
+    icon: ImageVector = Icons.Filled.Notifications
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -311,23 +416,45 @@ fun PermissionRow(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(
+                        if (isGranted) AccentGreen.copy(alpha = 0.14f)
+                        else AccentPurple.copy(alpha = 0.12f)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (isGranted) AccentGreen else AccentPurple,
+                    modifier = Modifier.size(21.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                Text(description, style = MaterialTheme.typography.bodySmall)
+                Text(title, style = MaterialTheme.typography.titleSmall)
+                Spacer(modifier = Modifier.height(1.dp))
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Spacer(modifier = Modifier.width(8.dp))
             if (isGranted) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = "Granted",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = AccentGreen
                 )
             } else {
                 Button(
                     onClick = onRequest,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
-                    ),
+                    shape = RoundedCornerShape(20.dp),
+                    contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
                     modifier = if (buttonTag != null) Modifier.testTag(buttonTag) else Modifier
                 ) {
                     Text("Grant", style = MaterialTheme.typography.labelMedium)
@@ -344,30 +471,43 @@ fun ColumnScope.AICoreStep(onComplete: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.weight(1f)
     ) {
-        Icon(
-            imageVector = Icons.Default.CheckCircle,
-            contentDescription = "AI Core",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(64.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .size(104.dp)
+                .clip(CircleShape)
+                .background(AccentGreen.copy(alpha = 0.14f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = "Ready",
+                tint = AccentGreen,
+                modifier = Modifier.size(56.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(28.dp))
         Text(
-            text = "AI Engine Verification",
-            style = MaterialTheme.typography.titleLarge
+            text = "You're all set",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Hush uses Google's on-device Gemini Nano model. We have verified your system is ready to process commands locally.",
+            text = "Hush parses your commands right on this device — with Gemini Nano when available, and a built-in parser everywhere else. No cloud, ever.",
             style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(36.dp))
         Button(
             onClick = onComplete,
-            modifier = Modifier.testTag("onboarding_start_button")
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp)
+                .testTag("onboarding_start_button"),
+            shape = RoundedCornerShape(27.dp)
         ) {
-            Text("Enter Hush")
+            Text("Enter Hush", style = MaterialTheme.typography.labelLarge)
         }
     }
 }
-

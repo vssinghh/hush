@@ -46,7 +46,8 @@ I built Hush because Android's notification settings are buried and rigid. With 
 
 - **Natural language rules.** Tell Hush *"Mute WhatsApp notifications except from Bob"* and it builds the rule for you.
 - **Voice input.** Tap the mic, say what you want. A live waveform confirms it's listening.
-- **Block, Mute, or Allow** — three actions per rule.
+- **Block, Mute, or Allow** — three actions per rule. Blocked notifications are dismissed instantly; muted ones are snoozed out of your shade.
+- **Works everywhere.** On devices without Gemini Nano, a built-in deterministic parser handles common commands — no AI required.
 - **Inverted / exception rules.** *"Block all from Gmail except @company.com"* works exactly how you'd expect.
 - **Time windows** so rules only fire during certain hours (e.g., 10 PM – 7 AM).
 - Full **notification history** — see what got filtered and which rule matched.

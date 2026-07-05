@@ -9,13 +9,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.AutoDelete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -46,6 +49,10 @@ fun SettingsScreen(
     val prefs = remember { context.getSharedPreferences("hush_preferences", Context.MODE_PRIVATE) }
     val isNotificationActive by viewModel.isNotificationActive.collectAsState()
     val isVoiceActive by viewModel.isVoiceActive.collectAsState()
+
+    // Refresh once when the screen first appears (tab navigation does not
+    // trigger ON_RESUME on the host activity)
+    LaunchedEffect(Unit) { viewModel.refreshPermissions() }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, viewModel) {
@@ -79,7 +86,11 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            com.hush.app.ui.components.HushHeader(
+                title = "Settings",
+                subtitle = "Service status & preferences",
+                leadingIcon = Icons.Outlined.Settings
+            )
 
             // ── Section: Service Status ──
             SectionLabel("SERVICE STATUS")
@@ -102,7 +113,7 @@ fun SettingsScreen(
 
             // Voice Input
             SettingsRow(
-                icon = Icons.Filled.Settings,
+                icon = Icons.Filled.Mic,
                 iconTint = Color.White,
                 iconBackground = AccentGreen,
                 title = "Voice Input",
@@ -121,7 +132,7 @@ fun SettingsScreen(
             SectionLabel("APPEARANCE")
 
             SettingsRow(
-                icon = Icons.Filled.Star,
+                icon = Icons.Filled.Palette,
                 iconTint = Color.White,
                 iconBackground = AccentPurple,
                 title = "Theme",
@@ -192,7 +203,7 @@ fun SettingsScreen(
             SectionLabel("DATA")
 
             SettingsRow(
-                icon = Icons.Filled.Delete,
+                icon = Icons.Filled.AutoDelete,
                 iconTint = Color.White,
                 iconBackground = AccentBlue,
                 title = "History Retention",
@@ -448,7 +459,7 @@ fun SettingsScreen(
 
             // Reset Onboarding
             SettingsRow(
-                icon = Icons.Filled.Warning,
+                icon = Icons.Filled.RestartAlt,
                 iconTint = Color.White,
                 iconBackground = AccentRed,
                 title = "Reset Onboarding",
@@ -559,7 +570,8 @@ private fun StatusBadge(isActive: Boolean, modifier: Modifier = Modifier) {
     Surface(
         shape = CircleShape,
         color = bgColor,
-        modifier = modifier
+        // Read the badge as a single element (also lets tests query its text)
+        modifier = modifier.semantics(mergeDescendants = true) {}
     ) {
         Text(
             text = label,

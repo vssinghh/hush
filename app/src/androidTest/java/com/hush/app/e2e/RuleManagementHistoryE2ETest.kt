@@ -153,10 +153,16 @@ class RuleManagementHistoryE2ETest {
         // Open Rules screen
         composeRule.onNodeWithTag("bottom_nav_rules").performClick()
 
-        // Swipe left on the rule card
+        // Swipe left on the rule card — this now asks for confirmation
         composeRule.onNodeWithTag("rule_card_102").performTouchInput {
             swipeLeft()
         }
+
+        // Confirm deletion in the dialog
+        composeRule.waitUntil(10000) {
+            composeRule.onAllNodesWithTag("rule_delete_confirm_button").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithTag("rule_delete_confirm_button").performClick()
 
         // Verify the rule card is removed from UI and DB
         composeRule.onNodeWithTag("rule_card_102").assertDoesNotExist()
@@ -196,7 +202,7 @@ class RuleManagementHistoryE2ETest {
         // Expected Result: Detail dialog opens
         composeRule.onNodeWithTag("rule_detail_dialog").assertIsDisplayed()
         composeRule.onNode(hasText("Mute WhatsApp") and hasAnyAncestor(hasTestTag("rule_detail_dialog"))).assertIsDisplayed()
-        composeRule.onNodeWithText("Package: com.whatsapp").assertIsDisplayed()
+        composeRule.onNode(hasText("WhatsApp") and hasAnyAncestor(hasTestTag("rule_detail_dialog"))).assertIsDisplayed()
 
         // Dismiss dialog
         composeRule.onNodeWithText("Close").performClick()
@@ -215,6 +221,11 @@ class RuleManagementHistoryE2ETest {
         // Open History screen
         composeRule.onNodeWithTag("bottom_nav_history").performClick()
 
+        // Wait for the Room flow to emit before counting
+        composeRule.waitUntil(10000) {
+            composeRule.onAllNodesWithText("Blocked text").fetchSemanticsNodes().isNotEmpty()
+        }
+
         // Verify all 3 items are present
         composeRule.onNodeWithTag("history_list").onChildren().assertCountEquals(3)
 
@@ -222,6 +233,9 @@ class RuleManagementHistoryE2ETest {
         composeRule.onNodeWithTag("history_tab_blocked").performClick()
 
         // Verify only blocked item is visible
+        composeRule.waitUntil(10000) {
+            composeRule.onAllNodesWithText("Allowed text").fetchSemanticsNodes().isEmpty()
+        }
         composeRule.onNodeWithText("Blocked text").assertIsDisplayed()
         composeRule.onNodeWithText("Allowed text").assertDoesNotExist()
 
@@ -229,6 +243,9 @@ class RuleManagementHistoryE2ETest {
         composeRule.onNodeWithTag("history_tab_all").performClick()
 
         // Verify all 3 visible
+        composeRule.waitUntil(10000) {
+            composeRule.onAllNodesWithText("Allowed text").fetchSemanticsNodes().isNotEmpty()
+        }
         composeRule.onNodeWithTag("history_list").onChildren().assertCountEquals(3)
     }
 
@@ -265,7 +282,7 @@ class RuleManagementHistoryE2ETest {
 
         // Expected Result: Detail modal opens, showing rule name
         composeRule.onNodeWithTag("history_detail_dialog").assertIsDisplayed()
-        composeRule.onNodeWithText("Triggered by Rule: Block Spam").assertIsDisplayed()
+        composeRule.onNode(hasText("Block Spam") and hasAnyAncestor(hasTestTag("history_detail_dialog"))).assertIsDisplayed()
 
         // Dismiss dialog
         composeRule.onNodeWithText("Close").performClick()

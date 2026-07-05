@@ -11,5 +11,6 @@ data class ParsedCommand(
     val isInverted: Boolean,
     val timeStart: LocalTime?,
     val timeEnd: LocalTime?,
-    val summary: String
+    val summary: String,
+    val originalPrompt: String? = null
 )

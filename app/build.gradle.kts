@@ -94,6 +94,12 @@ tasks.withType<JavaCompile>().configureEach {
 
 
 dependencies {
+    constraints {
+        // androidx.test 1.7/espresso 3.7 need these transitively; lift the main
+        // runtime graph so AGP's consistent resolution doesn't conflict.
+        implementation("androidx.tracing:tracing:1.1.0")
+        implementation("androidx.concurrent:concurrent-futures:1.2.0")
+    }
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -105,6 +111,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // Navigation

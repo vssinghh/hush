@@ -353,9 +353,13 @@ class CrossFeatureE2ETest {
             )
             logDao.insertLog(log)
 
-            // Delete the rule
+            // Delete the rule (swipe now asks for confirmation)
             composeRule.onNodeWithTag("bottom_nav_rules").performClick()
             composeRule.onNodeWithTag("rule_card_206").performTouchInput { swipeLeft() }
+            composeRule.waitUntil(10000) {
+                composeRule.onAllNodesWithTag("rule_delete_confirm_button").fetchSemanticsNodes().isNotEmpty()
+            }
+            composeRule.onNodeWithTag("rule_delete_confirm_button").performClick()
 
             // Wait for rule card deletion in UI/DB
             composeRule.waitUntil(10000) {
@@ -371,9 +375,9 @@ class CrossFeatureE2ETest {
             }
             composeRule.onNodeWithText("Rule deletion test").performClick()
 
-            // Expected Result: Detail renders fallback placeholder "Rule deleted" instead of crashing
+            // Expected Result: Detail renders a "(deleted)" fallback instead of crashing
             composeRule.onNodeWithTag("history_detail_dialog").assertIsDisplayed()
-            composeRule.onNodeWithText("Triggered by Rule: Rule deleted").assertIsDisplayed()
+            composeRule.onNodeWithText("Temp Rule (deleted)").assertIsDisplayed()
         }
     }
 }

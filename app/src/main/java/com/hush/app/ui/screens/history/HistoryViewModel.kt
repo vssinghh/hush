@@ -62,6 +62,11 @@ class HistoryViewModel @Inject constructor(
             }
     }
 
+    /** Clears any active filter, showing all logs (the "All" chip). */
+    fun clearFilter() {
+        _selectedFilter.value = null
+    }
+
     fun clearAll() {
         viewModelScope.launch {
             historyRepository.clearAllLogs()

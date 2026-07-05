@@ -9,13 +9,20 @@ class ParseCommandUseCase @Inject constructor(
     private val aiEngine: AIEngine,
     private val packageResolver: PackageResolver
 ) {
+    private val fallbackParser = FallbackCommandParser()
+
     suspend fun execute(prompt: String): ParsedCommand {
         if (prompt.isBlank()) {
             throw IllegalArgumentException("Prompt cannot be empty")
         }
 
-        // 1. Call AI Engine for parsing
-        val parsed = aiEngine.parseCommand(prompt)
+        // 1. Parse: prefer on-device AI, fall back to the deterministic parser
+        //    when Gemini Nano is unavailable on this device.
+        val parsed = if (aiEngine.isAvailable()) {
+            aiEngine.parseCommand(prompt)
+        } else {
+            fallbackParser.parse(prompt, packageResolver.getInstalledApps())
+        }
 
         // 2. Perform validation on required fields
         if (parsed.summary.isBlank() || parsed.summary == "MALFORMED_JSON_TRIGGER") {
