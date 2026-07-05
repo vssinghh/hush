@@ -276,10 +276,11 @@ class AppFoundationE2ETest {
         onboardingPrefs.isOnboardingCompleted = true
         recreateActivityAndWait("ai_unsupported_banner")
 
-        // Expected Result: Persistent banner is shown and chat buttons are disabled
+        // Expected Result: Persistent banner is shown; chat stays usable via
+        // the built-in fallback parser (basic mode)
         composeRule.onNodeWithTag("ai_unsupported_banner").assertIsDisplayed()
-        composeRule.onNodeWithTag("chat_send_button").assertIsNotEnabled()
-        composeRule.onNodeWithTag("chat_mic_button").assertIsNotEnabled()
+        composeRule.onNodeWithTag("chat_send_button").assertIsEnabled()
+        composeRule.onNodeWithTag("chat_mic_button").assertIsEnabled()
     }
 
     @Test
@@ -304,6 +305,7 @@ class AppFoundationE2ETest {
     fun testOnboarding_BatteryOptimizationRejected_AllowsProgressWithWarning() {
         // T2_F1_05: Verify battery optimization denial does not block onboarding
         onboardingPrefs.isOnboardingCompleted = false
+        (permissionManager as FakePermissionManager).grantBatteryOnRequest = false
         recreateActivityAndWait("onboarding_screen")
 
         // Go to onboarding

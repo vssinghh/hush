@@ -59,6 +59,14 @@ class HushNotificationListener : NotificationListenerService() {
         if (sbn == null) return
         if (!ensureInjected()) return
 
+        // Never evaluate our own notifications, and leave ongoing/foreground
+        // notifications (media players, navigation, etc.) alone — they can't
+        // be dismissed and shouldn't be filtered.
+        if (sbn.packageName == packageName) return
+        if (sbn.isOngoing ||
+            (sbn.notification.flags and Notification.FLAG_FOREGROUND_SERVICE) != 0
+        ) return
+
         serviceScope.launch {
             try {
                 val packageName = sbn.packageName
@@ -115,10 +123,19 @@ class HushNotificationListener : NotificationListenerService() {
 
                 Log.d("HushNotificationListener", ">> Result: action=$action for pkg=$packageName")
 
-                // Dismiss notification if matched rule action is BLOCK
-                if (action == RuleAction.BLOCK) {
-                    cancelNotification(sbn.key)
-                    Log.d("HushNotificationListener", ">> BLOCKED notification from $packageName")
+                when (action) {
+                    // BLOCK: dismiss the notification entirely
+                    RuleAction.BLOCK -> {
+                        cancelNotification(sbn.key)
+                        Log.d("HushNotificationListener", ">> BLOCKED notification from $packageName")
+                    }
+                    // MUTE: snooze it out of the shade for a while; it comes
+                    // back later instead of interrupting right now
+                    RuleAction.MUTE -> {
+                        snoozeNotification(sbn.key, MUTE_SNOOZE_MS)
+                        Log.d("HushNotificationListener", ">> MUTED (snoozed) notification from $packageName")
+                    }
+                    RuleAction.ALLOW -> Unit
                 }
             } catch (e: Exception) {
                 Log.e("HushNotificationListener", "Error evaluating notification: ${e.message}", e)
@@ -128,5 +145,11 @@ class HushNotificationListener : NotificationListenerService() {
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         // Optional tracking of removed notifications
+    }
+
+    companion object {
+        // Muted notifications are snoozed for an hour at a time; if the rule
+        // still matches when they re-post, they get snoozed again.
+        private const val MUTE_SNOOZE_MS = 60L * 60L * 1000L
     }
 }

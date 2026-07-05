@@ -8,6 +8,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hush.app.domain.model.ChatMessage
+import com.hush.app.domain.model.ChatRole
 import com.hush.app.domain.model.ParsedCommand
 import com.hush.app.domain.model.Rule
 import com.hush.app.domain.permission.PermissionManager
@@ -33,9 +35,11 @@ class ChatViewModel @Inject constructor(
     val permissionManager: PermissionManager
 ) : ViewModel() {
 
-    val mockMessages = mutableStateListOf(
-        "Welcome to Hush! Speak or type a filtering command (e.g., 'Mute Instagram').",
-        "Mute WhatsApp notifications except from Bob."
+    val messages = mutableStateListOf(
+        ChatMessage(
+            text = "Hi! I'm Hush. Tell me which notifications to quiet down — try \"Mute Instagram\" or \"Block Slack after 6pm\".",
+            role = ChatRole.ASSISTANT
+        )
     )
 
     val proposedRule = mutableStateOf<ParsedCommand?>(null)
@@ -104,8 +108,9 @@ class ChatViewModel @Inject constructor(
 
     fun handleSend(prompt: String) {
         if (prompt.isBlank()) return
-        mockMessages.add(prompt)
+        messages.add(ChatMessage(prompt, ChatRole.USER))
         textState.value = ""
+        errorMessage.value = null
 
         aiJob?.cancel()
         aiJob = viewModelScope.launch {
@@ -115,11 +120,11 @@ class ChatViewModel @Inject constructor(
                 if (result.summary == "MALFORMED_JSON_TRIGGER") {
                     errorMessage.value = "Failed to parse command"
                 } else {
-                    proposedRule.value = result
+                    proposedRule.value = result.copy(originalPrompt = prompt)
                     errorMessage.value = null
                 }
             } catch (e: Exception) {
-                errorMessage.value = "AI Engine error: ${e.message}"
+                errorMessage.value = e.message ?: "Something went wrong while parsing that command."
             } finally {
                 isProcessing.value = false
             }
@@ -135,7 +140,7 @@ class ChatViewModel @Inject constructor(
                 val entity = Rule(
                     name = rule.summary,
                     enabled = true,
-                    originalPrompt = rule.summary,
+                    originalPrompt = rule.originalPrompt ?: rule.summary,
                     appPackage = rule.app,
                     appDisplayName = appDisplayName,
                     matchField = rule.matchField,
@@ -150,7 +155,7 @@ class ChatViewModel @Inject constructor(
                     updatedAt = Instant.now()
                 )
                 ruleRepository.insertRule(entity)
-                mockMessages.add("Rule created successfully")
+                messages.add(ChatMessage("Rule created successfully", ChatRole.ASSISTANT))
                 proposedRule.value = null
             } catch (e: Exception) {
                 errorMessage.value = "Failed to save rule: ${e.message}"
@@ -160,6 +165,7 @@ class ChatViewModel @Inject constructor(
 
     fun cancelProposedRule() {
         proposedRule.value = null
+        messages.add(ChatMessage("No problem — rule discarded. Tell me what you'd like instead.", ChatRole.ASSISTANT))
     }
 
     fun startModelDownload() {
@@ -226,4 +232,3 @@ class ChatViewModel @Inject constructor(
         }
     }
 }
-

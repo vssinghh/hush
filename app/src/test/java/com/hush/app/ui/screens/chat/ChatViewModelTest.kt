@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
+import com.hush.app.domain.model.ChatRole
 import com.hush.app.domain.model.MatchField
 import com.hush.app.domain.model.MatchType
 import com.hush.app.domain.model.ParsedCommand
@@ -274,14 +275,15 @@ class ChatViewModelTest {
 
     @Test
     fun testHandleSend_addsMessageAndTriggersAI() = runTest {
-        val initialSize = viewModel.mockMessages.size
+        val initialSize = viewModel.messages.size
 
         viewModel.handleSend("Mute WhatsApp")
         testScheduler.advanceUntilIdle()
 
-        // Prompt added to mockMessages
-        assertEquals(initialSize + 1, viewModel.mockMessages.size)
-        assertEquals("Mute WhatsApp", viewModel.mockMessages.last())
+        // Prompt added to messages as a user message
+        assertEquals(initialSize + 1, viewModel.messages.size)
+        assertEquals("Mute WhatsApp", viewModel.messages.last().text)
+        assertEquals(ChatRole.USER, viewModel.messages.last().role)
         // Input text cleared
         assertEquals("", viewModel.textState.value)
 
@@ -295,12 +297,12 @@ class ChatViewModelTest {
 
     @Test
     fun testHandleSend_blankPrompt_ignored() = runTest {
-        val initialSize = viewModel.mockMessages.size
+        val initialSize = viewModel.messages.size
 
         viewModel.handleSend("   ")
         testScheduler.advanceUntilIdle()
 
-        assertEquals(initialSize, viewModel.mockMessages.size)
+        assertEquals(initialSize, viewModel.messages.size)
         assertNull(viewModel.proposedRule.value)
     }
 
@@ -310,7 +312,7 @@ class ChatViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertNull(viewModel.proposedRule.value)
-        assertEquals("AI Engine error: Malformed AI response: summary is missing or invalid", viewModel.errorMessage.value)
+        assertEquals("Malformed AI response: summary is missing or invalid", viewModel.errorMessage.value)
     }
 
     @Test
@@ -318,7 +320,7 @@ class ChatViewModelTest {
         // Set up a proposed rule
         viewModel.handleSend("Mute WhatsApp")
         testScheduler.advanceUntilIdle()
-        val initialMessagesSize = viewModel.mockMessages.size
+        val initialMessagesSize = viewModel.messages.size
 
         // Confirm it
         viewModel.confirmProposedRule()
@@ -334,8 +336,9 @@ class ChatViewModelTest {
         assertTrue(saved.enabled)
 
         // Success bubble added to chat log
-        assertEquals(initialMessagesSize + 1, viewModel.mockMessages.size)
-        assertEquals("Rule created successfully", viewModel.mockMessages.last())
+        assertEquals(initialMessagesSize + 1, viewModel.messages.size)
+        assertEquals("Rule created successfully", viewModel.messages.last().text)
+        assertEquals(ChatRole.ASSISTANT, viewModel.messages.last().role)
 
         // Proposed rule cleared
         assertNull(viewModel.proposedRule.value)

@@ -100,7 +100,9 @@ class ConversationalAIE2ETest {
         }
 
         // Expected Result: Chat bubble and proposed rule card displayed
-        composeRule.onNodeWithText("Mute WhatsApp").assertIsDisplayed()
+        // ("Mute WhatsApp" appears both as the user's bubble and as the card's
+        // rule summary, so assert on the first match.)
+        composeRule.onAllNodesWithText("Mute WhatsApp").onFirst().assertIsDisplayed()
         composeRule.onNodeWithTag("ai_rule_card").assertIsDisplayed()
     }
 

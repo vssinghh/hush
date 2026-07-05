@@ -19,6 +19,9 @@ class FakePermissionManager @Inject constructor(
     var batteryExempt = false
     var notificationDenied = false
 
+    /** Set false to simulate the user declining the battery-exemption dialog. */
+    var grantBatteryOnRequest = true
+
     private val prefs by lazy {
         context.getSharedPreferences("hush_preferences", Context.MODE_PRIVATE)
     }
@@ -41,7 +44,9 @@ class FakePermissionManager @Inject constructor(
     }
 
     override fun requestBatteryExemption(context: Context) {
-        batteryExempt = true
+        if (grantBatteryOnRequest) {
+            batteryExempt = true
+        }
     }
 
     override fun setNotificationAccessDenied(denied: Boolean) {

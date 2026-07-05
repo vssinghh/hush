@@ -371,9 +371,9 @@ class CrossFeatureE2ETest {
             }
             composeRule.onNodeWithText("Rule deletion test").performClick()
 
-            // Expected Result: Detail renders fallback placeholder "Rule deleted" instead of crashing
+            // Expected Result: Detail renders a "(deleted)" fallback instead of crashing
             composeRule.onNodeWithTag("history_detail_dialog").assertIsDisplayed()
-            composeRule.onNodeWithText("Triggered by Rule: Rule deleted").assertIsDisplayed()
+            composeRule.onNodeWithText("Temp Rule (deleted)").assertIsDisplayed()
         }
     }
 }
