@@ -353,9 +353,13 @@ class CrossFeatureE2ETest {
             )
             logDao.insertLog(log)
 
-            // Delete the rule
+            // Delete the rule (swipe now asks for confirmation)
             composeRule.onNodeWithTag("bottom_nav_rules").performClick()
             composeRule.onNodeWithTag("rule_card_206").performTouchInput { swipeLeft() }
+            composeRule.waitUntil(10000) {
+                composeRule.onAllNodesWithTag("rule_delete_confirm_button").fetchSemanticsNodes().isNotEmpty()
+            }
+            composeRule.onNodeWithTag("rule_delete_confirm_button").performClick()
 
             // Wait for rule card deletion in UI/DB
             composeRule.waitUntil(10000) {

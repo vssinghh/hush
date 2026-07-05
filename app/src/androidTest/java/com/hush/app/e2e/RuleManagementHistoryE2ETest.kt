@@ -153,10 +153,16 @@ class RuleManagementHistoryE2ETest {
         // Open Rules screen
         composeRule.onNodeWithTag("bottom_nav_rules").performClick()
 
-        // Swipe left on the rule card
+        // Swipe left on the rule card — this now asks for confirmation
         composeRule.onNodeWithTag("rule_card_102").performTouchInput {
             swipeLeft()
         }
+
+        // Confirm deletion in the dialog
+        composeRule.waitUntil(10000) {
+            composeRule.onAllNodesWithTag("rule_delete_confirm_button").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithTag("rule_delete_confirm_button").performClick()
 
         // Verify the rule card is removed from UI and DB
         composeRule.onNodeWithTag("rule_card_102").assertDoesNotExist()

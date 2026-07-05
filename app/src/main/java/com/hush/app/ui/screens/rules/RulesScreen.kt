@@ -58,6 +58,7 @@ fun RulesScreen(
 ) {
     val rulesList by viewModel.rulesList.collectAsState()
     var selectedRule by remember { mutableStateOf<Rule?>(null) }
+    var rulePendingDeletion by remember { mutableStateOf<Rule?>(null) }
     val timeFormatter = remember { DateTimeFormatter.ofPattern("h:mm a") }
 
     Surface(
@@ -102,12 +103,12 @@ fun RulesScreen(
                     ) { _, rule ->
                         val dismissState = rememberSwipeToDismissBoxState(
                             confirmValueChange = { dismissValue ->
+                                // Ask for confirmation before deleting; don't
+                                // let the card actually dismiss on swipe.
                                 if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
-                                    viewModel.deleteRule(rule)
-                                    true
-                                } else {
-                                    false
+                                    rulePendingDeletion = rule
                                 }
+                                false
                             }
                         )
 
@@ -224,10 +225,7 @@ fun RulesScreen(
 
                     Spacer(modifier = Modifier.height(4.dp))
                     OutlinedButton(
-                        onClick = {
-                            viewModel.deleteRule(rule)
-                            selectedRule = null
-                        },
+                        onClick = { rulePendingDeletion = rule },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("rule_delete_button"),
@@ -264,6 +262,48 @@ fun RulesScreen(
                 }
             },
             modifier = Modifier.testTag("rule_detail_dialog")
+        )
+    }
+
+    // ── Delete Confirmation Dialog ──
+    if (rulePendingDeletion != null) {
+        val rule = rulePendingDeletion!!
+        AlertDialog(
+            onDismissRequest = { rulePendingDeletion = null },
+            shape = RoundedCornerShape(24.dp),
+            title = { Text("Delete rule?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        rule.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        "This can't be undone.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteRule(rule)
+                        if (selectedRule?.id == rule.id) selectedRule = null
+                        rulePendingDeletion = null
+                    },
+                    modifier = Modifier.testTag("rule_delete_confirm_button")
+                ) {
+                    Text("Delete", color = AccentRed, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { rulePendingDeletion = null }) {
+                    Text("Cancel")
+                }
+            },
+            modifier = Modifier.testTag("rule_delete_dialog")
         )
     }
 }

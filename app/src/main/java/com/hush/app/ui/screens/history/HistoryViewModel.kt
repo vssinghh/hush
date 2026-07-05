@@ -8,6 +8,7 @@ import com.hush.app.domain.repository.HistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -19,52 +20,56 @@ class HistoryViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    private val _selectedTab = MutableStateFlow("All") // "All", "BLOCK", "MUTE", "ALLOW"
-    val selectedTab: StateFlow<String> = _selectedTab.asStateFlow()
+    private val _selectedFilter = MutableStateFlow<RuleAction?>(null)
+    val selectedFilter: StateFlow<RuleAction?> = _selectedFilter.asStateFlow()
 
-    val historyLogs: StateFlow<List<NotificationEvent>> = combine(
-        _searchQuery,
-        _selectedTab
-    ) { query, tab ->
-        Pair(query, tab)
-    }.flatMapLatest { (query, tab) ->
-        val baseFlow = if (query.isBlank()) {
-            if (tab == "All") {
-                historyRepository.getAllLogs()
-            } else {
-                val action = runCatching { RuleAction.valueOf(tab) }.getOrNull()
-                if (action != null) {
-                    historyRepository.getLogsByAction(action)
-                } else {
+    val historyLogs: StateFlow<List<NotificationEvent>> =
+        combine(
+            _searchQuery,
+            _selectedFilter
+        ) { query, filter ->
+            query to filter
+        }.flatMapLatest { (query, filter) ->
+
+            val flow =
+                if (query.isBlank()) {
                     historyRepository.getAllLogs()
-                }
-            }
-        } else {
-            historyRepository.searchLogs(query).map { list ->
-                if (tab == "All") {
-                    list
                 } else {
-                    val action = runCatching { RuleAction.valueOf(tab) }.getOrNull()
-                    if (action != null) {
-                        list.filter { it.actionTaken == action }
-                    } else {
-                        list
-                    }
+                    historyRepository.searchLogs(query)
                 }
+
+            flow.map { logs ->
+                filter?.let { action ->
+                    logs.filter { it.actionTaken == action }
+                } ?: logs
             }
-        }
-        baseFlow
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
 
-    fun setSelectedTab(tab: String) {
-        _selectedTab.value = tab
+    fun toggleFilter(filter: RuleAction) {
+        _selectedFilter.value =
+            if (_selectedFilter.value == filter) {
+                null
+            } else {
+                filter
+            }
+    }
+
+    /** Clears any active filter, showing all logs (the "All" chip). */
+    fun clearFilter() {
+        _selectedFilter.value = null
+    }
+
+    fun clearAll() {
+        viewModelScope.launch {
+            historyRepository.clearAllLogs()
+        }
     }
 }

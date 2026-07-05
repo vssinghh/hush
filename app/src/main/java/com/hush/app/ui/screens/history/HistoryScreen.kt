@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -39,10 +40,11 @@ fun HistoryScreen(
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
     val searchQuery by viewModel.searchQuery.collectAsState()
-    val selectedTab by viewModel.selectedTab.collectAsState()
+    val selectedFilter by viewModel.selectedFilter.collectAsState()
     val historyLogs by viewModel.historyLogs.collectAsState()
 
     var selectedLog by remember { mutableStateOf<NotificationEvent?>(null) }
+    var showClearDialog by remember { mutableStateOf(false) }
     val timeFormatter = remember {
         DateTimeFormatter.ofPattern("hh:mm a").withZone(ZoneId.systemDefault())
     }
@@ -56,7 +58,21 @@ fun HistoryScreen(
         HushHeader(
             title = "History",
             subtitle = "Everything Hush has filtered",
-            leadingIcon = Icons.Outlined.Inbox
+            leadingIcon = Icons.Outlined.Inbox,
+            trailing = {
+                IconButton(
+                    onClick = { showClearDialog = true },
+                    enabled = historyLogs.isNotEmpty(),
+                    modifier = Modifier.testTag("history_clear_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.DeleteSweep,
+                        contentDescription = "Clear all history",
+                        tint = if (historyLogs.isNotEmpty()) AccentRed
+                               else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    )
+                }
+            }
         )
 
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -88,38 +104,43 @@ fun HistoryScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // ── Filter Tabs ──
+            // ── Filter Tabs (null filter == "All") ──
             val tabs = listOf(
-                Triple("All", "All", MaterialTheme.colorScheme.primary),
-                Triple("BLOCK", "Blocked", StatusBlocked),
-                Triple("MUTE", "Muted", StatusMuted),
-                Triple("ALLOW", "Delivered", StatusDelivered)
+                FilterTab("All", null, MaterialTheme.colorScheme.primary),
+                FilterTab("Blocked", RuleAction.BLOCK, StatusBlocked),
+                FilterTab("Muted", RuleAction.MUTE, StatusMuted),
+                FilterTab("Delivered", RuleAction.ALLOW, StatusDelivered)
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                tabs.forEach { (key, label, color) ->
-                    val selected = selectedTab == key
+                tabs.forEach { tab ->
+                    val selected = selectedFilter == tab.action
                     FilterChip(
                         selected = selected,
-                        onClick = { viewModel.setSelectedTab(key) },
+                        onClick = {
+                            if (tab.action == null) viewModel.clearFilter()
+                            else viewModel.toggleFilter(tab.action)
+                        },
                         label = {
                             Text(
-                                label,
+                                tab.label,
                                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
                             )
                         },
                         shape = RoundedCornerShape(20.dp),
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = color.copy(alpha = 0.15f),
-                            selectedLabelColor = color
+                            selectedContainerColor = tab.color.copy(alpha = 0.15f),
+                            selectedLabelColor = tab.color
                         ),
                         border = FilterChipDefaults.filterChipBorder(
                             enabled = true,
                             selected = selected,
                             borderColor = MaterialTheme.colorScheme.outlineVariant,
-                            selectedBorderColor = color.copy(alpha = 0.4f),
+                            selectedBorderColor = tab.color.copy(alpha = 0.4f),
                             selectedBorderWidth = 1.dp
                         ),
-                        modifier = Modifier.testTag("history_tab_${label.lowercase().replace("delivered", "allowed")}")
+                        modifier = Modifier.testTag(
+                            "history_tab_${tab.label.lowercase().replace("delivered", "allowed")}"
+                        )
                     )
                 }
             }
@@ -137,9 +158,9 @@ fun HistoryScreen(
                     ) {
                         EmptyState(
                             icon = Icons.Outlined.Inbox,
-                            title = if (searchQuery.isBlank() && selectedTab == "All") "Nothing filtered yet"
+                            title = if (searchQuery.isBlank() && selectedFilter == null) "Nothing filtered yet"
                                     else "No matches",
-                            message = if (searchQuery.isBlank() && selectedTab == "All")
+                            message = if (searchQuery.isBlank() && selectedFilter == null)
                                 "Once your rules start catching notifications, they'll show up here."
                             else
                                 "Try a different search or filter.",
@@ -248,7 +269,33 @@ fun HistoryScreen(
             modifier = Modifier.testTag("history_detail_dialog")
         )
     }
+
+    // ── Clear All Confirmation Dialog ──
+    if (showClearDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDialog = false },
+            shape = RoundedCornerShape(24.dp),
+            title = { Text("Clear all history?") },
+            text = { Text("This will permanently delete all notification logs.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.clearAll()
+                    showClearDialog = false
+                }) {
+                    Text("Clear", color = AccentRed, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+            modifier = Modifier.testTag("history_clear_dialog")
+        )
+    }
 }
+
+private data class FilterTab(val label: String, val action: RuleAction?, val color: Color)
 
 @Composable
 private fun DetailRow(label: String, value: String) {
