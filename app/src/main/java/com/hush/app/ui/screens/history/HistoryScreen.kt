@@ -1,16 +1,17 @@
 package com.hush.app.ui.screens.history
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Inbox
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -58,7 +60,6 @@ fun HistoryScreen(
         HushHeader(
             title = "History",
             subtitle = "Everything Hush has filtered",
-            leadingIcon = Icons.Outlined.Inbox,
             trailing = {
                 IconButton(
                     onClick = { showClearDialog = true },
@@ -68,7 +69,7 @@ fun HistoryScreen(
                     Icon(
                         imageVector = Icons.Outlined.DeleteSweep,
                         contentDescription = "Clear all history",
-                        tint = if (historyLogs.isNotEmpty()) AccentRed
+                        tint = if (historyLogs.isNotEmpty()) EmberRed
                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
                 }
@@ -77,39 +78,46 @@ fun HistoryScreen(
 
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             // ── Search Input ──
-            TextField(
-                value = searchQuery,
-                onValueChange = { viewModel.setSearchQuery(it) },
-                placeholder = { Text("Search notifications…") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                TextField(
+                    value = searchQuery,
+                    onValueChange = { viewModel.setSearchQuery(it) },
+                    placeholder = { Text("Search notifications…") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("history_search_input"),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        cursorColor = MaterialTheme.colorScheme.primary
                     )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("history_search_input"),
-                singleLine = true,
-                shape = RoundedCornerShape(24.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
                 )
-            )
+            }
 
             Spacer(modifier = Modifier.height(10.dp))
 
             // ── Filter Tabs (null filter == "All") ──
             val tabs = listOf(
                 FilterTab("All", null, MaterialTheme.colorScheme.primary),
-                FilterTab("Blocked", RuleAction.BLOCK, StatusBlocked),
-                FilterTab("Muted", RuleAction.MUTE, StatusMuted),
-                FilterTab("Delivered", RuleAction.ALLOW, StatusDelivered)
+                FilterTab("Blocked", RuleAction.BLOCK, EmberRed),
+                FilterTab("Muted", RuleAction.MUTE, DuskGold),
+                FilterTab("Delivered", RuleAction.ALLOW, SageGreen)
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 tabs.forEach { tab ->
@@ -126,15 +134,15 @@ fun HistoryScreen(
                                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
                             )
                         },
-                        shape = RoundedCornerShape(20.dp),
+                        shape = CircleShape,
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = tab.color.copy(alpha = 0.15f),
+                            selectedContainerColor = tab.color.copy(alpha = 0.14f),
                             selectedLabelColor = tab.color
                         ),
                         border = FilterChipDefaults.filterChipBorder(
                             enabled = true,
                             selected = selected,
-                            borderColor = MaterialTheme.colorScheme.outlineVariant,
+                            borderColor = MaterialTheme.colorScheme.outline,
                             selectedBorderColor = tab.color.copy(alpha = 0.4f),
                             selectedBorderWidth = 1.dp
                         ),
@@ -200,10 +208,13 @@ fun HistoryScreen(
                                     LocalDate.now().minusDays(1) -> "Yesterday"
                                     else -> logDate.format(dayFormatter)
                                 }
+                                // Serif italic day marker — an editorial dateline
                                 Text(
                                     text = label,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontFamily = HushSerif,
+                                        fontStyle = FontStyle.Italic
+                                    ),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(
                                         start = 4.dp,
@@ -229,7 +240,8 @@ fun HistoryScreen(
         val log = selectedLog!!
         AlertDialog(
             onDismissRequest = { selectedLog = null },
-            shape = RoundedCornerShape(24.dp),
+            shape = MaterialTheme.shapes.extraLarge,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
             title = {
                 Column {
                     Text(
@@ -274,7 +286,8 @@ fun HistoryScreen(
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
-            shape = RoundedCornerShape(24.dp),
+            shape = MaterialTheme.shapes.extraLarge,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
             title = { Text("Clear all history?") },
             text = { Text("This will permanently delete all notification logs.") },
             confirmButton = {
@@ -282,7 +295,7 @@ fun HistoryScreen(
                     viewModel.clearAll()
                     showClearDialog = false
                 }) {
-                    Text("Clear", color = AccentRed, fontWeight = FontWeight.SemiBold)
+                    Text("Clear", color = EmberRed, fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
@@ -323,8 +336,8 @@ private fun HistoryEntryCard(
 ) {
     val iconColors = remember {
         listOf(
-            AccentPurple, AccentBlue, AccentGreen,
-            AccentRed, AccentAmber, AccentTeal
+            PlumMist, SlateBlue, SageGreen,
+            EmberRed, DuskGold, HarborTeal
         )
     }
     val iconColor = remember(log.appName) {
@@ -334,14 +347,13 @@ private fun HistoryEntryCard(
         log.appName.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
     }
 
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Row(
             modifier = Modifier
@@ -350,17 +362,17 @@ private fun HistoryEntryCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // ── App Icon Circle ──
+            // ── App Initial Disc (serif monogram) ──
             Box(
                 modifier = Modifier
                     .size(42.dp)
                     .clip(CircleShape)
-                    .background(iconColor.copy(alpha = 0.15f)),
+                    .background(iconColor.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = initial,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(fontFamily = HushSerif),
                     fontWeight = FontWeight.Bold,
                     color = iconColor
                 )
@@ -412,23 +424,23 @@ private fun HistoryEntryCard(
 // ── Status Badge Pill ──
 @Composable
 private fun StatusBadge(action: RuleAction) {
-    val (label, textColor, bgColor) = when (action) {
-        RuleAction.ALLOW -> Triple("Delivered", StatusDelivered, StatusDeliveredBg)
-        RuleAction.MUTE -> Triple("Muted", StatusMuted, StatusMutedBg)
-        RuleAction.BLOCK -> Triple("Blocked", StatusBlocked, StatusBlockedBg)
+    val (label, color) = when (action) {
+        RuleAction.ALLOW -> "Delivered" to SageGreen
+        RuleAction.MUTE -> "Muted" to DuskGold
+        RuleAction.BLOCK -> "Blocked" to EmberRed
     }
 
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(bgColor)
+            .background(color.copy(alpha = 0.14f))
             .padding(horizontal = 8.dp, vertical = 2.dp)
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
-            color = textColor
+            color = color
         )
     }
 }

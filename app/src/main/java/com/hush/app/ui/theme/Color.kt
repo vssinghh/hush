@@ -2,90 +2,65 @@ package com.hush.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+// ═════════════════════════════════════════════════════════════════════
+//  "Nocturne" palette — the moment after the noise stops.
+//  Light theme reads like paper at dawn; dark theme like a night sky.
+// ═════════════════════════════════════════════════════════════════════
+
 // ── Brand ──
-val BrandViolet = Color(0xFF6C4EE3)
-val BrandVioletBright = Color(0xFF7C5CFC)
+val InkIndigo = Color(0xFF3E3663)      // deep dusk indigo — primary (light)
+val MoonLilac = Color(0xFFC7BAF4)      // moonlit lilac — primary (dark)
 
-// ── Light Palette (warm, paper-like) ──
-val WarmCream = Color(0xFFFAF8F4)
-val WarmSurface = Color(0xFFF5F2ED)
-val WarmCard = Color(0xFFFFFFFF)
-val WarmOnSurface = Color(0xFF1C1B1F)
-val WarmOnSurfaceVariant = Color(0xFF6B6A6E)
-val WarmOutline = Color(0xFFDDD9D1)
+// ── Dawn (light) surfaces ──
+val DawnLinen = Color(0xFFF5F2EB)
+val DawnCard = Color(0xFFFDFCF8)
+val DawnInk = Color(0xFF232030)
+val DawnInkMuted = Color(0xFF6F6A7B)
+val DawnHairline = Color(0xFFE2DDD2)
 
-// Light tonal surface containers (M3)
-val LightContainerLowest = Color(0xFFFFFFFF)
-val LightContainerLow = Color(0xFFF6F3EE)
-val LightContainer = Color(0xFFF1EDE7)
-val LightContainerHigh = Color(0xFFEBE7E0)
-val LightContainerHighest = Color(0xFFE5E1D9)
+val DawnContainerLowest = Color(0xFFFFFFFF)
+val DawnContainerLow = Color(0xFFEFECE3)
+val DawnContainer = Color(0xFFEAE6DC)
+val DawnContainerHigh = Color(0xFFE3DFD3)
+val DawnContainerHighest = Color(0xFFDCD7CA)
 
-// ── Dark Palette (deep violet-black) ──
-val DarkBackground = Color(0xFF131118)
-val DarkSurface = Color(0xFF131118)
-val DarkCard = Color(0xFF211D29)
-val DarkOnSurface = Color(0xFFE7E1EA)
-val DarkOnSurfaceVariant = Color(0xFFA29DA8)
-val DarkOutline = Color(0xFF3A3542)
+// ── Midnight (dark) surfaces ──
+val MidnightSky = Color(0xFF121019)
+val MidnightCard = Color(0xFF1C1926)
+val MidnightInk = Color(0xFFECE8F4)
+val MidnightInkMuted = Color(0xFFA39EB1)
+val MidnightHairline = Color(0xFF353040)
 
-// Dark tonal surface containers (M3)
-val DarkContainerLowest = Color(0xFF0E0C12)
-val DarkContainerLow = Color(0xFF1A1721)
-val DarkContainer = Color(0xFF1F1B27)
-val DarkContainerHigh = Color(0xFF29242F)
-val DarkContainerHighest = Color(0xFF342E3D)
+val MidnightContainerLowest = Color(0xFF0C0A11)
+val MidnightContainerLow = Color(0xFF181521)
+val MidnightContainer = Color(0xFF1D1A28)
+val MidnightContainerHigh = Color(0xFF272232)
+val MidnightContainerHighest = Color(0xFF312B3F)
 
-// ── Accent Colors (for rule cards) ──
-val AccentPurple = Color(0xFF7C5CFC)
-val AccentPurpleLight = Color(0xFFF0EBFF)
-val AccentBlue = Color(0xFF3B82F6)
-val AccentBlueLight = Color(0xFFEBF2FF)
-val AccentGreen = Color(0xFF22C55E)
-val AccentGreenLight = Color(0xFFECFDF5)
-val AccentRed = Color(0xFFEF4444)
-val AccentRedLight = Color(0xFFFEF2F2)
-val AccentAmber = Color(0xFFF59E0B)
-val AccentAmberLight = Color(0xFFFFFBEB)
-val AccentTeal = Color(0xFF14B8A6)
-val AccentTealLight = Color(0xFFF0FDFA)
+// ── Semantic action colors (dusty, never neon) ──
+val EmberRed = Color(0xFFD9645C)       // Block
+val DuskGold = Color(0xFFB98A2A)       // Mute
+val SageGreen = Color(0xFF5E9B67)      // Allow / delivered / granted
+val SlateBlue = Color(0xFF6480C4)      // informational (apps, downloads)
+val PlumMist = Color(0xFF9384CD)       // match patterns / AI accents
+val HarborTeal = Color(0xFF4F9490)     // time windows
 
-// ── Status Badge Colors ──
-val StatusDelivered = Color(0xFF22C55E)
-val StatusDeliveredBg = Color(0xFFDCFCE7)
-val StatusMuted = Color(0xFF8B5CF6)
-val StatusMutedBg = Color(0xFFF3EEFF)
-val StatusBatched = Color(0xFFF59E0B)
-val StatusBatchedBg = Color(0xFFFEF9C3)
-val StatusBlocked = Color(0xFFEF4444)
-val StatusBlockedBg = Color(0xFFFEE2E2)
-val StatusAllowed = Color(0xFF3B82F6)
-val StatusAllowedBg = Color(0xFFDBEAFE)
-
-// ── Primary for interactions ──
-val PrimaryLight = BrandViolet
+// ── Primary roles ──
+val PrimaryLight = InkIndigo
 val OnPrimaryLight = Color(0xFFFFFFFF)
-val PrimaryContainerLight = Color(0xFFE9E1FF)
-val OnPrimaryContainerLight = Color(0xFF22005D)
+val PrimaryContainerLight = Color(0xFFE6E0F6)
+val OnPrimaryContainerLight = Color(0xFF29224A)
 
-val PrimaryDark = Color(0xFFCDBDFF)
-val OnPrimaryDark = Color(0xFF32206B)
-val PrimaryContainerDark = Color(0xFF4C3A94)
-val OnPrimaryContainerDark = Color(0xFFE9E1FF)
+val PrimaryDark = MoonLilac
+val OnPrimaryDark = Color(0xFF2E2653)
+val PrimaryContainerDark = Color(0xFF463D75)
+val OnPrimaryContainerDark = Color(0xFFE6E0F6)
 
 // ── Error ──
-val ErrorLight = Color(0xFFBA1A1A)
-val ErrorContainerLight = Color(0xFFFDE8E8)
-val OnErrorContainerLight = Color(0xFF410002)
+val ErrorLight = Color(0xFFB3261E)
+val ErrorContainerLight = Color(0xFFF9DEDC)
+val OnErrorContainerLight = Color(0xFF410E0B)
 
-val ErrorDark = Color(0xFFFFB4AB)
-val ErrorContainerDark = Color(0xFF93000A)
-val OnErrorContainerDark = Color(0xFFFFDAD6)
-
-// ── Bottom Nav ──
-val NavIndicator = Color(0xFFE9E1FF)
-val NavIndicatorDark = Color(0xFF4C3A94)
-
-// ── Card-on-Light (for status cards that always have light backgrounds) ──
-val CardOnLight = Color(0xFF1C1B1F)
-val CardOnLightMuted = Color(0xFF5A5860)
+val ErrorDark = Color(0xFFF2B8B5)
+val ErrorContainerDark = Color(0xFF8C1D18)
+val OnErrorContainerDark = Color(0xFFF9DEDC)

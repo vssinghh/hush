@@ -3,16 +3,15 @@ package com.hush.app.ui.screens.chat
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -27,7 +26,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Search
@@ -39,15 +37,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.offset
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,7 +56,6 @@ import com.hush.app.domain.model.ParsedCommand
 import com.hush.app.domain.model.RuleAction
 import com.hush.app.domain.repository.AIStatus
 import com.hush.app.ui.components.AttributeChip
-import com.hush.app.ui.components.HushGradient
 import com.hush.app.ui.components.HushHeader
 import com.hush.app.ui.components.StatusPill
 import com.hush.app.ui.theme.*
@@ -119,14 +115,13 @@ fun ChatScreen(
         ) {
             HushHeader(
                 title = "Hush",
-                subtitle = "Talk to your notifications",
-                leadingIcon = Icons.Outlined.NotificationsOff,
+                subtitle = "Tell your phone what deserves attention",
                 trailing = {
                     when (aiStatus) {
-                        AIStatus.READY -> StatusPill("Gemini Nano", AccentGreen, AccentGreen.copy(alpha = 0.12f))
-                        AIStatus.CHECKING -> StatusPill("Checking…", AccentAmber, AccentAmber.copy(alpha = 0.12f))
-                        AIStatus.DOWNLOADING -> StatusPill("Downloading", AccentBlue, AccentBlue.copy(alpha = 0.12f))
-                        else -> StatusPill("Basic mode", AccentPurple, AccentPurple.copy(alpha = 0.12f))
+                        AIStatus.READY -> StatusPill("Gemini Nano", SageGreen)
+                        AIStatus.CHECKING -> StatusPill("Checking…", DuskGold)
+                        AIStatus.DOWNLOADING -> StatusPill("Downloading", SlateBlue)
+                        else -> StatusPill("Basic mode", PlumMist)
                     }
                 }
             )
@@ -168,29 +163,29 @@ fun ChatScreen(
                         AIStatus.NOT_DOWNLOADED -> {
                             AiStatusBubble(
                                 modifier = Modifier.testTag("ai_download_banner"),
-                                containerColor = AccentAmberLight
+                                accent = DuskGold
                             ) {
                                 Column {
                                     Text(
                                         "Set up on-device AI",
                                         style = MaterialTheme.typography.titleSmall,
-                                        color = CardOnLight
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
                                         "Hush can download Gemini Nano (~350 MB) for smarter command understanding. Until then, a built-in parser handles simple commands.",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = CardOnLightMuted
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Button(
                                             onClick = { viewModel.startModelDownload() },
                                             modifier = Modifier.testTag("ai_download_button"),
-                                            shape = RoundedCornerShape(20.dp),
+                                            shape = CircleShape,
                                             colors = ButtonDefaults.buttonColors(
-                                                containerColor = AccentAmber,
-                                                contentColor = CardOnLight
+                                                containerColor = DuskGold,
+                                                contentColor = Color.White
                                             )
                                         ) {
                                             Text("Set Up AI", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
@@ -198,10 +193,10 @@ fun ChatScreen(
                                         OutlinedButton(
                                             onClick = { viewModel.openAICoreUpdateInStore(context) },
                                             modifier = Modifier.testTag("ai_update_button"),
-                                            shape = RoundedCornerShape(20.dp),
-                                            border = BorderStroke(1.dp, CardOnLightMuted),
+                                            shape = CircleShape,
+                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                                             colors = ButtonDefaults.outlinedButtonColors(
-                                                contentColor = CardOnLight
+                                                contentColor = MaterialTheme.colorScheme.onSurface
                                             )
                                         ) {
                                             Text("Check for Updates", fontSize = 13.sp)
@@ -214,27 +209,27 @@ fun ChatScreen(
                         AIStatus.DOWNLOADING -> {
                             AiStatusBubble(
                                 modifier = Modifier.testTag("ai_downloading_banner"),
-                                containerColor = AccentBlueLight
+                                accent = SlateBlue
                             ) {
                                 Column {
                                     Text(
                                         "Downloading Gemini Nano…",
                                         style = MaterialTheme.typography.titleSmall,
-                                        color = CardOnLight
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         "This may take a few minutes. Please stay on WiFi.",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = CardOnLightMuted
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Spacer(modifier = Modifier.height(10.dp))
                                     LinearProgressIndicator(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clip(RoundedCornerShape(4.dp)),
-                                        color = AccentBlue,
-                                        trackColor = AccentBlue.copy(alpha = 0.2f)
+                                        color = SlateBlue,
+                                        trackColor = SlateBlue.copy(alpha = 0.2f)
                                     )
                                 }
                             }
@@ -243,7 +238,7 @@ fun ChatScreen(
                         AIStatus.ERROR -> {
                             AiStatusBubble(
                                 modifier = Modifier.testTag("ai_error_banner"),
-                                containerColor = MaterialTheme.colorScheme.errorContainer
+                                accent = MaterialTheme.colorScheme.error
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
@@ -256,12 +251,12 @@ fun ChatScreen(
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             "AI engine encountered an error",
-                                            color = MaterialTheme.colorScheme.onErrorContainer,
+                                            color = MaterialTheme.colorScheme.onSurface,
                                             style = MaterialTheme.typography.titleSmall
                                         )
                                         Text(
                                             aiErrorMessage ?: "This may be temporary. Tap Retry to try again.",
-                                            color = MaterialTheme.colorScheme.onErrorContainer,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             style = MaterialTheme.typography.bodySmall
                                         )
                                     }
@@ -269,7 +264,7 @@ fun ChatScreen(
                                     FilledTonalButton(
                                         onClick = { viewModel.retryAICheck() },
                                         modifier = Modifier.testTag("ai_retry_button"),
-                                        shape = RoundedCornerShape(20.dp)
+                                        shape = CircleShape
                                     ) {
                                         Icon(Icons.Default.Refresh, contentDescription = "Retry", modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
@@ -282,20 +277,20 @@ fun ChatScreen(
                         AIStatus.NOT_SUPPORTED -> {
                             AiStatusBubble(
                                 modifier = Modifier.testTag("ai_unsupported_banner"),
-                                containerColor = AccentPurpleLight
+                                accent = PlumMist
                             ) {
                                 Column {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
                                             imageVector = Icons.Outlined.AutoAwesome,
                                             contentDescription = "Basic mode",
-                                            tint = AccentPurple,
+                                            tint = PlumMist,
                                             modifier = Modifier.size(20.dp)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             "Running in basic mode",
-                                            color = CardOnLight,
+                                            color = MaterialTheme.colorScheme.onSurface,
                                             style = MaterialTheme.typography.titleSmall
                                         )
                                     }
@@ -303,7 +298,7 @@ fun ChatScreen(
                                     Text(
                                         aiErrorMessage
                                             ?: "Gemini Nano isn't available on this device, so Hush uses its built-in parser. Simple commands like \"Mute Instagram\" or \"Block Slack after 6pm\" work great.",
-                                        color = CardOnLightMuted,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         style = MaterialTheme.typography.bodySmall
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
@@ -311,10 +306,10 @@ fun ChatScreen(
                                         Button(
                                             onClick = { viewModel.retryAICheck() },
                                             modifier = Modifier.testTag("ai_retry_button"),
-                                            shape = RoundedCornerShape(20.dp),
+                                            shape = CircleShape,
                                             colors = ButtonDefaults.buttonColors(
-                                                containerColor = AccentPurple,
-                                                contentColor = Color.White
+                                                containerColor = MaterialTheme.colorScheme.primary,
+                                                contentColor = MaterialTheme.colorScheme.onPrimary
                                             )
                                         ) {
                                             Icon(Icons.Default.Refresh, contentDescription = "Retry", modifier = Modifier.size(16.dp))
@@ -324,10 +319,10 @@ fun ChatScreen(
                                         OutlinedButton(
                                             onClick = { viewModel.openAICoreUpdateInStore(context) },
                                             modifier = Modifier.testTag("ai_update_button"),
-                                            shape = RoundedCornerShape(20.dp),
-                                            border = BorderStroke(1.dp, CardOnLightMuted),
+                                            shape = CircleShape,
+                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                                             colors = ButtonDefaults.outlinedButtonColors(
-                                                contentColor = CardOnLight
+                                                contentColor = MaterialTheme.colorScheme.onSurface
                                             )
                                         ) {
                                             Text("Check for Updates")
@@ -372,7 +367,7 @@ fun ChatScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(18.dp, 18.dp, 18.dp, 6.dp))
+                                    .clip(RoundedCornerShape(20.dp, 20.dp, 20.dp, 6.dp))
                                     .background(MaterialTheme.colorScheme.errorContainer)
                                     .padding(12.dp)
                                     .testTag("chat_error_message")
@@ -390,14 +385,14 @@ fun ChatScreen(
                 // Show voice waveform UI
                 if (isListening) {
                     item {
-                        Card(
+                        val primaryColor = MaterialTheme.colorScheme.primary
+                        Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("voice_waveform_ui"),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = AccentPurpleLight
-                            )
+                            shape = MaterialTheme.shapes.large,
+                            color = primaryColor.copy(alpha = 0.08f),
+                            border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.25f))
                         ) {
                             Column(
                                 modifier = Modifier
@@ -408,10 +403,9 @@ fun ChatScreen(
                                 Text(
                                     text = "Listening…",
                                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                                    color = AccentPurple,
+                                    color = primaryColor,
                                     modifier = Modifier.padding(bottom = 8.dp)
                                 )
-                                val primaryColor = AccentPurple
                                 Canvas(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -485,14 +479,14 @@ fun ChatScreen(
                                 )
                             },
                             modifier = Modifier.testTag("suggestion_chip_$idx"),
-                            shape = RoundedCornerShape(20.dp),
+                            shape = CircleShape,
                             border = SuggestionChipDefaults.suggestionChipBorder(
                                 enabled = true,
-                                borderColor = AccentPurple.copy(alpha = 0.4f)
+                                borderColor = MaterialTheme.colorScheme.outline
                             ),
                             colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = AccentPurple.copy(alpha = 0.08f),
-                                labelColor = AccentPurple
+                                containerColor = Color.Transparent,
+                                labelColor = MaterialTheme.colorScheme.primary
                             )
                         )
                     }
@@ -507,13 +501,12 @@ fun ChatScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Pill input with the mic living inside it — one visual unit
+                // Bordered pill input with the mic living inside it
                 Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .shadow(6.dp, RoundedCornerShape(28.dp), spotColor = Color.Black.copy(alpha = 0.35f)),
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh
+                    modifier = Modifier.weight(1f),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TextField(
@@ -554,7 +547,7 @@ fun ChatScreen(
                                 .testTag("chat_mic_button"),
                             enabled = inputEnabled,
                             colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = if (isListening) AccentRed else Color.Transparent,
+                                containerColor = if (isListening) EmberRed else Color.Transparent,
                                 contentColor = if (isListening) Color.White
                                                else MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -567,15 +560,14 @@ fun ChatScreen(
                         }
                     }
                 }
-                // Gradient send button
+                // Solid ink send button
                 Box(
                     modifier = Modifier
                         .size(52.dp)
-                        .shadow(6.dp, CircleShape, spotColor = AccentPurple.copy(alpha = 0.5f))
                         .clip(CircleShape)
                         .background(
-                            if (inputEnabled) HushGradient
-                            else SolidColor(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            if (inputEnabled) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surfaceContainerHigh
                         )
                 ) {
                     IconButton(
@@ -589,7 +581,7 @@ fun ChatScreen(
                             .testTag("chat_send_button"),
                         enabled = inputEnabled,
                         colors = IconButtonDefaults.iconButtonColors(
-                            contentColor = Color.White,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
                             disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
                     ) {
@@ -610,7 +602,7 @@ fun ChatScreen(
 @Composable
 private fun AiStatusBubble(
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    accent: Color? = null,
     content: @Composable () -> Unit
 ) {
     Box(
@@ -618,11 +610,13 @@ private fun AiStatusBubble(
         contentAlignment = Alignment.CenterStart
     ) {
         Surface(
-            modifier = modifier
-                .fillMaxWidth(0.94f),
-            shape = RoundedCornerShape(18.dp, 18.dp, 18.dp, 6.dp),
-            color = containerColor,
-            tonalElevation = 1.dp
+            modifier = modifier.fillMaxWidth(0.94f),
+            shape = RoundedCornerShape(20.dp, 20.dp, 20.dp, 6.dp),
+            color = accent?.copy(alpha = 0.08f) ?: MaterialTheme.colorScheme.surfaceVariant,
+            border = BorderStroke(
+                1.dp,
+                accent?.copy(alpha = 0.30f) ?: MaterialTheme.colorScheme.outline
+            )
         ) {
             Box(modifier = Modifier.padding(14.dp)) {
                 content()
@@ -638,12 +632,11 @@ private fun ChatBubble(
     showTimestamp: Boolean = true
 ) {
     val isUser = message.role == ChatRole.USER
-    val isDark = isSystemInDarkTheme()
     val bubbleShape = RoundedCornerShape(
-        topStart = if (isUser) 18.dp else 6.dp,
-        topEnd = if (isUser) 6.dp else 18.dp,
-        bottomStart = 18.dp,
-        bottomEnd = 18.dp
+        topStart = if (isUser) 20.dp else 6.dp,
+        topEnd = if (isUser) 6.dp else 20.dp,
+        bottomStart = 20.dp,
+        bottomEnd = 20.dp
     )
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -651,19 +644,22 @@ private fun ChatBubble(
     ) {
         Row(verticalAlignment = Alignment.Top) {
             if (!isUser) {
+                // Serif "h" monogram — the quiet voice of the app
                 Box(
                     modifier = Modifier
                         .padding(top = 2.dp)
                         .size(28.dp)
                         .clip(CircleShape)
-                        .background(HushGradient),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.NotificationsOff,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(15.dp)
+                    Text(
+                        text = "h",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontFamily = HushSerif,
+                            fontStyle = FontStyle.Italic
+                        ),
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -672,33 +668,26 @@ private fun ChatBubble(
                 horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
             ) {
                 if (isUser) {
-                    // Gradient user bubble — the brand moment of the chat
+                    // Solid ink bubble — the user's voice carries the brand color
                     Box(
                         modifier = Modifier
                             .widthIn(max = 290.dp)
-                            .shadow(4.dp, bubbleShape, spotColor = AccentPurple.copy(alpha = 0.4f))
                             .clip(bubbleShape)
-                            .background(HushGradient)
+                            .background(MaterialTheme.colorScheme.primary)
                     ) {
                         Text(
                             text = message.text,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 } else {
                     Surface(
-                        modifier = Modifier
-                            .widthIn(max = 290.dp)
-                            .then(
-                                if (!isDark) Modifier.shadow(
-                                    elevation = 2.dp,
-                                    shape = bubbleShape
-                                ) else Modifier
-                            ),
+                        modifier = Modifier.widthIn(max = 290.dp),
                         shape = bubbleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         Text(
                             text = message.text,
@@ -730,9 +719,9 @@ private fun ProposedRuleCard(
     onCancel: () -> Unit
 ) {
     val actionColor = when (rule.action) {
-        RuleAction.BLOCK -> AccentRed
-        RuleAction.MUTE -> AccentAmber
-        RuleAction.ALLOW -> AccentGreen
+        RuleAction.BLOCK -> EmberRed
+        RuleAction.MUTE -> DuskGold
+        RuleAction.ALLOW -> SageGreen
     }
     val actionIcon = when (rule.action) {
         RuleAction.BLOCK -> Icons.Outlined.Block
@@ -745,10 +734,9 @@ private fun ProposedRuleCard(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("ai_rule_card"),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceVariant,
-        border = BorderStroke(1.5.dp, actionColor.copy(alpha = 0.5f)),
-        tonalElevation = 2.dp
+        border = BorderStroke(1.dp, actionColor.copy(alpha = 0.45f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -756,7 +744,7 @@ private fun ProposedRuleCard(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(actionColor.copy(alpha = 0.15f)),
+                        .background(actionColor.copy(alpha = 0.14f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -776,7 +764,7 @@ private fun ProposedRuleCard(
                     )
                     Text(
                         rule.summary,
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.titleMedium.copy(fontFamily = HushSerif),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -790,13 +778,13 @@ private fun ProposedRuleCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 AttributeChip(icon = actionIcon, label = rule.action.name.lowercase().replaceFirstChar { it.uppercase() }, color = actionColor)
-                AttributeChip(icon = Icons.Outlined.Apps, label = appLabel ?: "All apps", color = AccentBlue)
+                AttributeChip(icon = Icons.Outlined.Apps, label = appLabel ?: "All apps", color = SlateBlue)
                 if (rule.timeStart != null || rule.timeEnd != null) {
                     val window = listOfNotNull(
                         rule.timeStart?.format(timeFormatter),
                         rule.timeEnd?.format(timeFormatter)
                     ).joinToString("–")
-                    AttributeChip(icon = Icons.Outlined.Schedule, label = window, color = AccentTeal)
+                    AttributeChip(icon = Icons.Outlined.Schedule, label = window, color = HarborTeal)
                 }
             }
             if (rule.matchPattern != null || rule.isInverted) {
@@ -804,10 +792,10 @@ private fun ProposedRuleCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     rule.matchPattern?.let { pattern ->
                         val patternIcon = if (rule.matchField == MatchField.SENDER) Icons.Outlined.Person else Icons.Outlined.Search
-                        AttributeChip(icon = patternIcon, label = "\"$pattern\"", color = AccentPurple)
+                        AttributeChip(icon = patternIcon, label = "\"$pattern\"", color = PlumMist)
                     }
                     if (rule.isInverted) {
-                        AttributeChip(icon = Icons.Outlined.SwapHoriz, label = "Exception rule", color = AccentAmber)
+                        AttributeChip(icon = Icons.Outlined.SwapHoriz, label = "Exception rule", color = DuskGold)
                     }
                 }
             }
@@ -821,13 +809,13 @@ private fun ProposedRuleCard(
                     Icon(
                         imageVector = Icons.Default.Warning,
                         contentDescription = null,
-                        tint = AccentRed,
+                        tint = EmberRed,
                         modifier = Modifier.size(15.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         "This app isn't installed on this device.",
-                        color = AccentRed,
+                        color = EmberRed,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -851,7 +839,7 @@ private fun ProposedRuleCard(
                 Button(
                     onClick = onConfirm,
                     modifier = Modifier.testTag("ai_rule_confirm"),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = actionColor,
                         contentColor = Color.White
@@ -872,9 +860,9 @@ private fun ThinkingBubble() {
     ) {
         Surface(
             modifier = Modifier.testTag("ai_thinking_bubble"),
-            shape = RoundedCornerShape(18.dp, 18.dp, 18.dp, 6.dp),
+            shape = RoundedCornerShape(20.dp, 20.dp, 20.dp, 6.dp),
             color = MaterialTheme.colorScheme.surfaceVariant,
-            tonalElevation = 1.dp
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
@@ -902,7 +890,7 @@ private fun ThinkingBubble() {
                             .size(10.dp)
                             .offset(y = offsetY.dp)
                             .clip(CircleShape)
-                            .background(AccentPurple.copy(alpha = 0.7f))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
                     )
                 }
             }
