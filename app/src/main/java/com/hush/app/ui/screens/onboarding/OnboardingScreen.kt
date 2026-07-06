@@ -9,6 +9,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -32,15 +33,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.hush.app.ui.components.HushGradient
-import com.hush.app.ui.theme.AccentGreen
-import com.hush.app.ui.theme.AccentPurple
+import com.hush.app.ui.components.DuskGradient
+import com.hush.app.ui.theme.HushSerif
+import com.hush.app.ui.theme.SageGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,11 +82,14 @@ fun OnboardingScreen(
     if (showBatteryWarning) {
         AlertDialog(
             onDismissRequest = { showBatteryWarning = false },
+            shape = MaterialTheme.shapes.extraLarge,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
             title = { Text("Keep App Alive") },
             text = { Text("Hush works best when exempted from battery restrictions.") },
             confirmButton = {
                 Button(
                     onClick = { showBatteryWarning = false },
+                    shape = CircleShape,
                     modifier = Modifier.testTag("onboarding_battery_warning_dismiss")
                 ) {
                     Text("Dismiss")
@@ -198,6 +202,7 @@ fun ColumnScope.WelcomeStep(onNext: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.weight(1f)
     ) {
+        // Dusk-sky hero — the one gradient moment in the whole app
         Box(
             modifier = Modifier
                 .size(104.dp)
@@ -205,15 +210,15 @@ fun ColumnScope.WelcomeStep(onNext: () -> Unit) {
                     scaleX = heroScale
                     scaleY = heroScale
                 }
-                .clip(RoundedCornerShape(32.dp))
-                .background(HushGradient),
+                .clip(CircleShape)
+                .background(DuskGradient),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Outlined.NotificationsOff,
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(52.dp)
+                modifier = Modifier.size(48.dp)
             )
         }
         Spacer(modifier = Modifier.height(28.dp))
@@ -225,7 +230,10 @@ fun ColumnScope.WelcomeStep(onNext: () -> Unit) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Control notifications by simply\ntalking to your phone",
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontFamily = HushSerif,
+                fontStyle = FontStyle.Italic
+            ),
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -256,7 +264,7 @@ fun ColumnScope.WelcomeStep(onNext: () -> Unit) {
                 .fillMaxWidth()
                 .height(54.dp)
                 .testTag("onboarding_next_button"),
-            shape = RoundedCornerShape(27.dp)
+            shape = CircleShape
         ) {
             Text("Get Started", style = MaterialTheme.typography.labelLarge)
         }
@@ -273,13 +281,13 @@ private fun FeatureRow(icon: ImageVector, title: String, description: String) {
             modifier = Modifier
                 .size(44.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(AccentPurple.copy(alpha = 0.12f)),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = AccentPurple,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(22.dp)
             )
         }
@@ -374,7 +382,7 @@ fun ColumnScope.PermissionsStep(
                 .fillMaxWidth()
                 .height(54.dp)
                 .testTag("onboarding_next_button"),
-            shape = RoundedCornerShape(27.dp)
+            shape = CircleShape
         ) {
             Text("Continue", style = MaterialTheme.typography.labelLarge)
         }
@@ -405,11 +413,13 @@ fun PermissionRow(
     buttonTag: String? = null,
     icon: ImageVector = Icons.Filled.Notifications
 ) {
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(
+            1.dp,
+            if (isGranted) SageGreen.copy(alpha = 0.45f) else MaterialTheme.colorScheme.outline
         )
     ) {
         Row(
@@ -421,15 +431,15 @@ fun PermissionRow(
                     .size(42.dp)
                     .clip(RoundedCornerShape(13.dp))
                     .background(
-                        if (isGranted) AccentGreen.copy(alpha = 0.14f)
-                        else AccentPurple.copy(alpha = 0.12f)
+                        if (isGranted) SageGreen.copy(alpha = 0.14f)
+                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = if (isGranted) AccentGreen else AccentPurple,
+                    tint = if (isGranted) SageGreen else MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(21.dp)
                 )
             }
@@ -448,12 +458,12 @@ fun PermissionRow(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = "Granted",
-                    tint = AccentGreen
+                    tint = SageGreen
                 )
             } else {
                 Button(
                     onClick = onRequest,
-                    shape = RoundedCornerShape(20.dp),
+                    shape = CircleShape,
                     contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
                     modifier = if (buttonTag != null) Modifier.testTag(buttonTag) else Modifier
                 ) {
@@ -475,13 +485,13 @@ fun ColumnScope.AICoreStep(onComplete: () -> Unit) {
             modifier = Modifier
                 .size(104.dp)
                 .clip(CircleShape)
-                .background(AccentGreen.copy(alpha = 0.14f)),
+                .background(SageGreen.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.CheckCircle,
                 contentDescription = "Ready",
-                tint = AccentGreen,
+                tint = SageGreen,
                 modifier = Modifier.size(56.dp)
             )
         }
@@ -505,7 +515,7 @@ fun ColumnScope.AICoreStep(onComplete: () -> Unit) {
                 .fillMaxWidth()
                 .height(54.dp)
                 .testTag("onboarding_start_button"),
-            shape = RoundedCornerShape(27.dp)
+            shape = CircleShape
         ) {
             Text("Enter Hush", style = MaterialTheme.typography.labelLarge)
         }

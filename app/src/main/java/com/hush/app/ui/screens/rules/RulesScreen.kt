@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -39,9 +40,9 @@ import com.hush.app.ui.theme.*
 import java.time.format.DateTimeFormatter
 
 private fun actionColor(action: RuleAction): Color = when (action) {
-    RuleAction.BLOCK -> AccentRed
-    RuleAction.MUTE -> AccentAmber
-    RuleAction.ALLOW -> AccentGreen
+    RuleAction.BLOCK -> EmberRed
+    RuleAction.MUTE -> DuskGold
+    RuleAction.ALLOW -> SageGreen
 }
 
 private fun actionIcon(action: RuleAction): ImageVector = when (action) {
@@ -71,8 +72,7 @@ fun RulesScreen(
             HushHeader(
                 title = "Rules",
                 subtitle = if (rulesList.isEmpty()) "Your filters live here"
-                           else "${rulesList.count { it.enabled }} of ${rulesList.size} active",
-                leadingIcon = Icons.Outlined.FilterAlt
+                           else "${rulesList.count { it.enabled }} of ${rulesList.size} active"
             )
 
             // ── Content ──
@@ -121,8 +121,8 @@ fun RulesScreen(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .clip(RoundedCornerShape(18.dp))
-                                        .background(AccentRed)
+                                        .clip(MaterialTheme.shapes.large)
+                                        .background(EmberRed)
                                         .padding(horizontal = 20.dp),
                                     contentAlignment = Alignment.CenterEnd
                                 ) {
@@ -154,7 +154,8 @@ fun RulesScreen(
         var actionState by remember(rule) { mutableStateOf(rule.action) }
         AlertDialog(
             onDismissRequest = { selectedRule = null },
-            shape = RoundedCornerShape(24.dp),
+            shape = MaterialTheme.shapes.extraLarge,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
             title = {
                 Column {
                     Text(
@@ -213,8 +214,9 @@ fun RulesScreen(
                                         modifier = Modifier.size(16.dp)
                                     )
                                 },
+                                shape = CircleShape,
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = color.copy(alpha = 0.15f),
+                                    selectedContainerColor = color.copy(alpha = 0.14f),
                                     selectedLabelColor = color,
                                     selectedLeadingIconColor = color
                                 ),
@@ -229,10 +231,10 @@ fun RulesScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("rule_delete_button"),
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, AccentRed.copy(alpha = 0.5f)),
+                        shape = MaterialTheme.shapes.small,
+                        border = BorderStroke(1.dp, EmberRed.copy(alpha = 0.5f)),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = AccentRed
+                            contentColor = EmberRed
                         )
                     ) {
                         Icon(
@@ -270,7 +272,8 @@ fun RulesScreen(
         val rule = rulePendingDeletion!!
         AlertDialog(
             onDismissRequest = { rulePendingDeletion = null },
-            shape = RoundedCornerShape(24.dp),
+            shape = MaterialTheme.shapes.extraLarge,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
             title = { Text("Delete rule?") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -295,7 +298,7 @@ fun RulesScreen(
                     },
                     modifier = Modifier.testTag("rule_delete_confirm_button")
                 ) {
-                    Text("Delete", color = AccentRed, fontWeight = FontWeight.SemiBold)
+                    Text("Delete", color = EmberRed, fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
@@ -318,37 +321,30 @@ private fun RuleCard(
     val color = actionColor(rule.action)
     val contentAlpha = if (rule.enabled) 1f else 0.55f
 
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .testTag("rule_card_${rule.id}"),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(IntrinsicSize.Min)
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Action-colored icon tile
+            // Action-colored edge bar — a quiet signal of what the rule does
             Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(color.copy(alpha = if (rule.enabled) 0.15f else 0.08f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = actionIcon(rule.action),
-                    contentDescription = null,
-                    tint = color.copy(alpha = contentAlpha),
-                    modifier = Modifier.size(22.dp)
-                )
-            }
+                    .width(4.dp)
+                    .fillMaxHeight()
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = if (rule.enabled) 0.9f else 0.35f))
+            )
             Spacer(modifier = Modifier.width(12.dp))
 
             // Rule info
@@ -362,9 +358,14 @@ private fun RuleCard(
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     AttributeChip(
+                        icon = actionIcon(rule.action),
+                        label = rule.action.name.lowercase().replaceFirstChar { it.uppercase() },
+                        color = color.copy(alpha = contentAlpha)
+                    )
+                    AttributeChip(
                         icon = Icons.Outlined.Apps,
                         label = rule.appDisplayName ?: rule.appPackage ?: "All apps",
-                        color = AccentBlue.copy(alpha = contentAlpha)
+                        color = SlateBlue.copy(alpha = contentAlpha)
                     )
                     if (rule.timeStart != null || rule.timeEnd != null) {
                         AttributeChip(
@@ -373,21 +374,21 @@ private fun RuleCard(
                                 rule.timeStart?.format(timeFormatter),
                                 rule.timeEnd?.format(timeFormatter)
                             ).joinToString("–"),
-                            color = AccentTeal.copy(alpha = contentAlpha)
+                            color = HarborTeal.copy(alpha = contentAlpha)
                         )
                     }
                     if (rule.isInverted) {
                         AttributeChip(
                             icon = Icons.Outlined.SwapHoriz,
                             label = "Exception",
-                            color = AccentAmber.copy(alpha = contentAlpha)
+                            color = DuskGold.copy(alpha = contentAlpha)
                         )
                     } else if (rule.matchPattern != null) {
                         val patternIcon = if (rule.matchField == MatchField.SENDER) Icons.Outlined.Person else Icons.Outlined.Search
                         AttributeChip(
                             icon = patternIcon,
                             label = "\"${rule.matchPattern}\"",
-                            color = AccentPurple.copy(alpha = contentAlpha)
+                            color = PlumMist.copy(alpha = contentAlpha)
                         )
                     }
                 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -14,10 +15,8 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,13 +28,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.compose.runtime.collectAsState
 import com.hush.app.domain.model.RuleAction
+import com.hush.app.ui.components.HushHeader
+import com.hush.app.ui.components.QuietSurface
 import com.hush.app.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,7 +79,8 @@ fun SettingsScreen(
     var showRetentionMenu by remember { mutableStateOf(false) }
 
     Scaffold(
-        modifier = modifier.testTag("settings_screen")
+        modifier = modifier.testTag("settings_screen"),
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -86,114 +88,109 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            com.hush.app.ui.components.HushHeader(
+            HushHeader(
                 title = "Settings",
-                subtitle = "Service status & preferences",
-                leadingIcon = Icons.Outlined.Settings
+                subtitle = "Service status & preferences"
             )
 
             // ── Section: Service Status ──
             SectionLabel("SERVICE STATUS")
-
-            // Notification Interception
-            SettingsRow(
-                icon = Icons.Filled.Notifications,
-                iconTint = Color.White,
-                iconBackground = AccentGreen,
-                title = "Notification Interception",
-                subtitle = "Intercept and classify incoming notifications",
-                trailing = {
-                    StatusBadge(
-                        isActive = isNotificationActive,
-                        modifier = Modifier.testTag("settings_notification_status")
-                    )
-                }
-            )
-            SettingsDivider()
-
-            // Voice Input
-            SettingsRow(
-                icon = Icons.Filled.Mic,
-                iconTint = Color.White,
-                iconBackground = AccentGreen,
-                title = "Voice Input",
-                subtitle = "Control Hush with voice commands",
-                trailing = {
-                    StatusBadge(
-                        isActive = isVoiceActive,
-                        modifier = Modifier.testTag("settings_voice_status")
-                    )
-                }
-            )
+            SettingsGroup {
+                SettingsRow(
+                    icon = Icons.Filled.Notifications,
+                    accent = SageGreen,
+                    title = "Notification Interception",
+                    subtitle = "Intercept and classify incoming notifications",
+                    trailing = {
+                        StatusBadge(
+                            isActive = isNotificationActive,
+                            modifier = Modifier.testTag("settings_notification_status")
+                        )
+                    }
+                )
+                SettingsDivider()
+                SettingsRow(
+                    icon = Icons.Filled.Mic,
+                    accent = SlateBlue,
+                    title = "Voice Input",
+                    subtitle = "Control Hush with voice commands",
+                    trailing = {
+                        StatusBadge(
+                            isActive = isVoiceActive,
+                            modifier = Modifier.testTag("settings_voice_status")
+                        )
+                    }
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             // ── Section: Appearance ──
             SectionLabel("APPEARANCE")
+            SettingsGroup {
+                SettingsRow(
+                    icon = Icons.Filled.Palette,
+                    accent = PlumMist,
+                    title = "Theme",
+                    subtitle = "Choose light, dark, or system theme",
+                    onClick = { showThemeMenu = !showThemeMenu },
+                    modifier = Modifier.testTag("settings_theme_pref"),
+                    trailing = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = themeOption,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                )
 
-            SettingsRow(
-                icon = Icons.Filled.Palette,
-                iconTint = Color.White,
-                iconBackground = AccentPurple,
-                title = "Theme",
-                subtitle = "Choose light, dark, or system theme",
-                onClick = { showThemeMenu = !showThemeMenu },
-                modifier = Modifier.testTag("settings_theme_pref"),
-                trailing = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = themeOption,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                // Theme selector (inline options)
+                if (showThemeMenu) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 72.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OptionChip(
+                            label = "Light Theme",
+                            isSelected = themeOption == "Light Theme",
+                            onClick = {
+                                themeOption = "Light Theme"
+                                prefs.edit().putString("theme_option", "Light Theme").apply()
+                                showThemeMenu = false
+                            },
+                            modifier = Modifier.testTag("settings_theme_light_option")
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        OptionChip(
+                            label = "Dark Theme",
+                            isSelected = themeOption == "Dark Theme",
+                            onClick = {
+                                themeOption = "Dark Theme"
+                                prefs.edit().putString("theme_option", "Dark Theme").apply()
+                                showThemeMenu = false
+                            },
+                            modifier = Modifier.testTag("settings_theme_dark_option")
+                        )
+                        OptionChip(
+                            label = "System Default",
+                            isSelected = themeOption == "System Default",
+                            onClick = {
+                                themeOption = "System Default"
+                                prefs.edit().putString("theme_option", "System Default").apply()
+                                showThemeMenu = false
+                            },
+                            modifier = Modifier.testTag("settings_theme_system_option")
                         )
                     }
-                }
-            )
-
-            // Theme selector (inline options)
-            if (showThemeMenu) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 80.dp, end = 24.dp, top = 4.dp, bottom = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ThemeOptionChip(
-                        label = "Light Theme",
-                        isSelected = themeOption == "Light Theme",
-                        onClick = {
-                            themeOption = "Light Theme"
-                            prefs.edit().putString("theme_option", "Light Theme").apply()
-                            showThemeMenu = false
-                        },
-                        modifier = Modifier.testTag("settings_theme_light_option")
-                    )
-                    ThemeOptionChip(
-                        label = "Dark Theme",
-                        isSelected = themeOption == "Dark Theme",
-                        onClick = {
-                            themeOption = "Dark Theme"
-                            prefs.edit().putString("theme_option", "Dark Theme").apply()
-                            showThemeMenu = false
-                        },
-                        modifier = Modifier.testTag("settings_theme_dark_option")
-                    )
-                    ThemeOptionChip(
-                        label = "System Default",
-                        isSelected = themeOption == "System Default",
-                        onClick = {
-                            themeOption = "System Default"
-                            prefs.edit().putString("theme_option", "System Default").apply()
-                            showThemeMenu = false
-                        },
-                        modifier = Modifier.testTag("settings_theme_system_option")
-                    )
                 }
             }
 
@@ -201,285 +198,292 @@ fun SettingsScreen(
 
             // ── Section: Data ──
             SectionLabel("DATA")
+            SettingsGroup {
+                SettingsRow(
+                    icon = Icons.Filled.AutoDelete,
+                    accent = SlateBlue,
+                    title = "History Retention",
+                    subtitle = "How long to keep notification history",
+                    onClick = { showRetentionMenu = !showRetentionMenu },
+                    modifier = Modifier.testTag("settings_retention_pref"),
+                    trailing = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = retentionPolicy,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                )
 
-            SettingsRow(
-                icon = Icons.Filled.AutoDelete,
-                iconTint = Color.White,
-                iconBackground = AccentBlue,
-                title = "History Retention",
-                subtitle = "How long to keep notification history",
-                onClick = { showRetentionMenu = !showRetentionMenu },
-                modifier = Modifier.testTag("settings_retention_pref"),
-                trailing = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = retentionPolicy,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                // Retention selector (inline options)
+                if (showRetentionMenu) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 72.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OptionChip(
+                            label = "7 Days",
+                            isSelected = retentionPolicy == "7 Days",
+                            onClick = {
+                                retentionPolicy = "7 Days"
+                                prefs.edit().putString("retention_policy", "7 Days").apply()
+                                showRetentionMenu = false
+                                viewModel.pruneDatabase("7 Days")
+                            },
+                            modifier = Modifier.testTag("settings_retention_7_days")
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        OptionChip(
+                            label = "30 Days",
+                            isSelected = retentionPolicy == "30 Days",
+                            onClick = {
+                                retentionPolicy = "30 Days"
+                                prefs.edit().putString("retention_policy", "30 Days").apply()
+                                showRetentionMenu = false
+                                viewModel.pruneDatabase("30 Days")
+                            },
+                            modifier = Modifier.testTag("settings_retention_30_days")
+                        )
+                        OptionChip(
+                            label = "90 Days",
+                            isSelected = retentionPolicy == "90 Days",
+                            onClick = {
+                                retentionPolicy = "90 Days"
+                                prefs.edit().putString("retention_policy", "90 Days").apply()
+                                showRetentionMenu = false
+                                viewModel.pruneDatabase("90 Days")
+                            },
+                            modifier = Modifier.testTag("settings_retention_90_days")
+                        )
+                    }
+                }
+
+                SettingsDivider()
+
+                // Rule Tester
+                var showRuleTester by remember { mutableStateOf(false) }
+                var selectedAppIndex by remember { mutableIntStateOf(-1) }
+                var testTitle by remember { mutableStateOf("") }
+                var testText by remember { mutableStateOf("") }
+                var testSender by remember { mutableStateOf("") }
+                var showAppDropdown by remember { mutableStateOf(false) }
+                val installedApps by viewModel.installedApps.collectAsState()
+                val testResult by viewModel.testResult.collectAsState()
+
+                SettingsRow(
+                    icon = Icons.Filled.PlayArrow,
+                    accent = HarborTeal,
+                    title = "Rule Tester",
+                    subtitle = "Simulate a notification to test your rules",
+                    onClick = {
+                        showRuleTester = !showRuleTester
+                        if (!showRuleTester) viewModel.clearTestResult()
+                    },
+                    modifier = Modifier.testTag("settings_rule_tester"),
+                    trailing = {
+                        Icon(
+                            imageVector = if (showRuleTester)
+                                Icons.Filled.KeyboardArrowDown
+                            else
+                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                )
+
+                if (showRuleTester) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // App selector
+                        Box {
+                            OutlinedTextField(
+                                value = if (selectedAppIndex >= 0 && selectedAppIndex < installedApps.size)
+                                    installedApps[selectedAppIndex].displayName
+                                else "",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("App") },
+                                placeholder = { Text("Select an app...") },
+                                shape = MaterialTheme.shapes.small,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showAppDropdown = true },
+                                enabled = false,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
+                            // Invisible clickable overlay
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clickable { showAppDropdown = true }
+                            )
+                            DropdownMenu(
+                                expanded = showAppDropdown,
+                                onDismissRequest = { showAppDropdown = false },
+                                modifier = Modifier.heightIn(max = 300.dp)
+                            ) {
+                                installedApps.forEachIndexed { index, app ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(
+                                                    text = app.displayName,
+                                                    style = MaterialTheme.typography.bodyMedium
+                                                )
+                                                Text(
+                                                    text = app.packageName,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            selectedAppIndex = index
+                                            showAppDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        // Title field
+                        OutlinedTextField(
+                            value = testTitle,
+                            onValueChange = { testTitle = it },
+                            label = { Text("Title") },
+                            placeholder = { Text("e.g. Promotion Alert") },
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        // Text field
+                        OutlinedTextField(
+                            value = testText,
+                            onValueChange = { testText = it },
+                            label = { Text("Text / Body") },
+                            placeholder = { Text("e.g. 50% off today only!") },
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        // Sender field
+                        OutlinedTextField(
+                            value = testSender,
+                            onValueChange = { testSender = it },
+                            label = { Text("Sender") },
+                            placeholder = { Text("e.g. Mom, Bob") },
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        // Evaluate button
+                        Button(
+                            onClick = {
+                                if (selectedAppIndex >= 0 && selectedAppIndex < installedApps.size) {
+                                    val app = installedApps[selectedAppIndex]
+                                    viewModel.testRule(
+                                        packageName = app.packageName,
+                                        appName = app.displayName,
+                                        title = testTitle,
+                                        text = testText,
+                                        sender = testSender
+                                    )
+                                }
+                            },
+                            enabled = selectedAppIndex >= 0,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = CircleShape,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Text("Evaluate Rules", fontWeight = FontWeight.SemiBold)
+                        }
+
+                        // Result display
+                        testResult?.let { result ->
+                            val resultColor = when (result.action) {
+                                RuleAction.BLOCK -> EmberRed
+                                RuleAction.MUTE -> DuskGold
+                                RuleAction.ALLOW -> SageGreen
+                            }
+                            Surface(
+                                shape = MaterialTheme.shapes.medium,
+                                color = resultColor.copy(alpha = 0.10f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        text = "Verdict: ${result.action.name}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = resultColor
+                                    )
+                                    Text(
+                                        text = "A notification from ${result.appName} with these properties would be ${result.action.name.lowercase()}ed.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                SettingsDivider()
+
+                // Reset Onboarding
+                SettingsRow(
+                    icon = Icons.Filled.RestartAlt,
+                    accent = EmberRed,
+                    title = "Reset Onboarding",
+                    subtitle = "Re-run the first-time setup wizard",
+                    onClick = onResetOnboarding,
+                    trailing = {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                }
-            )
-
-            // Retention selector (inline options)
-            if (showRetentionMenu) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 80.dp, end = 24.dp, top = 4.dp, bottom = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ThemeOptionChip(
-                        label = "7 Days",
-                        isSelected = retentionPolicy == "7 Days",
-                        onClick = {
-                            retentionPolicy = "7 Days"
-                            prefs.edit().putString("retention_policy", "7 Days").apply()
-                            showRetentionMenu = false
-                            viewModel.pruneDatabase("7 Days")
-                        },
-                        modifier = Modifier.testTag("settings_retention_7_days")
-                    )
-                    ThemeOptionChip(
-                        label = "30 Days",
-                        isSelected = retentionPolicy == "30 Days",
-                        onClick = {
-                            retentionPolicy = "30 Days"
-                            prefs.edit().putString("retention_policy", "30 Days").apply()
-                            showRetentionMenu = false
-                            viewModel.pruneDatabase("30 Days")
-                        },
-                        modifier = Modifier.testTag("settings_retention_30_days")
-                    )
-                    ThemeOptionChip(
-                        label = "90 Days",
-                        isSelected = retentionPolicy == "90 Days",
-                        onClick = {
-                            retentionPolicy = "90 Days"
-                            prefs.edit().putString("retention_policy", "90 Days").apply()
-                            showRetentionMenu = false
-                            viewModel.pruneDatabase("90 Days")
-                        },
-                        modifier = Modifier.testTag("settings_retention_90_days")
-                    )
-                }
+                )
             }
-
-            SettingsDivider()
-
-            // Rule Tester
-            var showRuleTester by remember { mutableStateOf(false) }
-            var selectedAppIndex by remember { mutableIntStateOf(-1) }
-            var testTitle by remember { mutableStateOf("") }
-            var testText by remember { mutableStateOf("") }
-            var testSender by remember { mutableStateOf("") }
-            var showAppDropdown by remember { mutableStateOf(false) }
-            val installedApps by viewModel.installedApps.collectAsState()
-            val testResult by viewModel.testResult.collectAsState()
-
-            SettingsRow(
-                icon = Icons.Filled.PlayArrow,
-                iconTint = Color.White,
-                iconBackground = AccentTeal,
-                title = "Rule Tester",
-                subtitle = "Simulate a notification to test your rules",
-                onClick = {
-                    showRuleTester = !showRuleTester
-                    if (!showRuleTester) viewModel.clearTestResult()
-                },
-                modifier = Modifier.testTag("settings_rule_tester"),
-                trailing = {
-                    Icon(
-                        imageVector = if (showRuleTester)
-                            Icons.Filled.KeyboardArrowDown
-                        else
-                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            )
-
-            if (showRuleTester) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .padding(bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // App selector
-                    Box {
-                        OutlinedTextField(
-                            value = if (selectedAppIndex >= 0 && selectedAppIndex < installedApps.size)
-                                installedApps[selectedAppIndex].displayName
-                            else "",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("App") },
-                            placeholder = { Text("Select an app...") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showAppDropdown = true },
-                            enabled = false,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                                disabledBorderColor = MaterialTheme.colorScheme.outline,
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                        // Invisible clickable overlay
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { showAppDropdown = true }
-                        )
-                        DropdownMenu(
-                            expanded = showAppDropdown,
-                            onDismissRequest = { showAppDropdown = false },
-                            modifier = Modifier.heightIn(max = 300.dp)
-                        ) {
-                            installedApps.forEachIndexed { index, app ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Column {
-                                            Text(
-                                                text = app.displayName,
-                                                style = MaterialTheme.typography.bodyMedium
-                                            )
-                                            Text(
-                                                text = app.packageName,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    },
-                                    onClick = {
-                                        selectedAppIndex = index
-                                        showAppDropdown = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    // Title field
-                    OutlinedTextField(
-                        value = testTitle,
-                        onValueChange = { testTitle = it },
-                        label = { Text("Title") },
-                        placeholder = { Text("e.g. Promotion Alert") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    // Text field
-                    OutlinedTextField(
-                        value = testText,
-                        onValueChange = { testText = it },
-                        label = { Text("Text / Body") },
-                        placeholder = { Text("e.g. 50% off today only!") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    // Sender field
-                    OutlinedTextField(
-                        value = testSender,
-                        onValueChange = { testSender = it },
-                        label = { Text("Sender") },
-                        placeholder = { Text("e.g. Mom, Bob") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    // Evaluate button
-                    Button(
-                        onClick = {
-                            if (selectedAppIndex >= 0 && selectedAppIndex < installedApps.size) {
-                                val app = installedApps[selectedAppIndex]
-                                viewModel.testRule(
-                                    packageName = app.packageName,
-                                    appName = app.displayName,
-                                    title = testTitle,
-                                    text = testText,
-                                    sender = testSender
-                                )
-                            }
-                        },
-                        enabled = selectedAppIndex >= 0,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AccentTeal
-                        )
-                    ) {
-                        Text("Evaluate Rules", fontWeight = FontWeight.SemiBold)
-                    }
-
-                    // Result display
-                    testResult?.let { result ->
-                        val (resultColor, resultBgColor) = when (result.action) {
-                            RuleAction.BLOCK -> AccentRed to AccentRedLight
-                            RuleAction.MUTE -> Color(0xFFD97706) to Color(0xFFFEF3C7)
-                            RuleAction.ALLOW -> AccentGreen to AccentGreenLight
-                        }
-                        Surface(
-                            shape = MaterialTheme.shapes.medium,
-                            color = resultBgColor,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    text = "Verdict: ${result.action.name}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = resultColor
-                                )
-                                Text(
-                                    text = "A notification from ${result.appName} with these properties would be ${result.action.name.lowercase()}ed.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = resultColor.copy(alpha = 0.8f)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            SettingsDivider()
-
-            // Reset Onboarding
-            SettingsRow(
-                icon = Icons.Filled.RestartAlt,
-                iconTint = Color.White,
-                iconBackground = AccentRed,
-                title = "Reset Onboarding",
-                subtitle = "Re-run the first-time setup wizard",
-                onClick = onResetOnboarding,
-                trailing = {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            )
 
             // ── Version Footer ──
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.height(32.dp))
             Text(
                 text = "Hush v1.0",
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontFamily = HushSerif,
+                    fontStyle = FontStyle.Italic
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -499,16 +503,26 @@ private fun SectionLabel(text: String) {
         style = MaterialTheme.typography.labelSmall,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-        letterSpacing = MaterialTheme.typography.labelSmall.letterSpacing
+        modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)
     )
+}
+
+/** A hairline-bordered island grouping related settings rows. */
+@Composable
+private fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {
+    QuietSurface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        Column(content = content)
+    }
 }
 
 @Composable
 private fun SettingsRow(
     icon: ImageVector,
-    iconTint: Color,
-    iconBackground: Color,
+    accent: Color,
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
@@ -519,26 +533,26 @@ private fun SettingsRow(
         modifier = modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Colored circular icon
+        // Soft-washed icon tile
         Box(
             modifier = Modifier
                 .size(40.dp)
-                .clip(CircleShape)
-                .background(iconBackground),
+                .clip(RoundedCornerShape(12.dp))
+                .background(accent.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = iconTint,
+                tint = accent,
                 modifier = Modifier.size(20.dp)
             )
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(14.dp))
 
         // Title + subtitle
         Column(modifier = Modifier.weight(1f)) {
@@ -564,12 +578,11 @@ private fun SettingsRow(
 
 @Composable
 private fun StatusBadge(isActive: Boolean, modifier: Modifier = Modifier) {
-    val bgColor = if (isActive) AccentGreenLight else AccentRedLight
-    val textColor = if (isActive) AccentGreen else AccentRed
+    val color = if (isActive) SageGreen else EmberRed
     val label = if (isActive) "Active" else "Inactive"
     Surface(
         shape = CircleShape,
-        color = bgColor,
+        color = color.copy(alpha = 0.12f),
         // Read the badge as a single element (also lets tests query its text)
         modifier = modifier.semantics(mergeDescendants = true) {}
     ) {
@@ -577,7 +590,7 @@ private fun StatusBadge(isActive: Boolean, modifier: Modifier = Modifier) {
             text = label,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
-            color = textColor,
+            color = color,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }
@@ -586,30 +599,32 @@ private fun StatusBadge(isActive: Boolean, modifier: Modifier = Modifier) {
 @Composable
 private fun SettingsDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(start = 80.dp, end = 24.dp),
-        thickness = 0.5.dp,
+        modifier = Modifier.padding(start = 70.dp, end = 16.dp),
+        thickness = 1.dp,
         color = MaterialTheme.colorScheme.outlineVariant
     )
 }
 
 @Composable
-private fun ThemeOptionChip(
+private fun OptionChip(
     label: String,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val primary = MaterialTheme.colorScheme.primary
     Surface(
         onClick = onClick,
         shape = MaterialTheme.shapes.small,
-        color = if (isSelected) AccentPurpleLight else MaterialTheme.colorScheme.surfaceVariant,
+        color = if (isSelected) primary.copy(alpha = 0.10f)
+                else MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = modifier.fillMaxWidth()
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (isSelected) AccentPurple else MaterialTheme.colorScheme.onSurface,
+            color = if (isSelected) primary else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
         )
     }

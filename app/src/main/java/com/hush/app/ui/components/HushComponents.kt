@@ -1,6 +1,8 @@
 package com.hush.app.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,57 +27,40 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.Icon
-import com.hush.app.ui.theme.AccentPurple
+import com.hush.app.ui.theme.PlumMist
 
-/** Gradient used for brand moments (logo chip, hero icons, user bubbles). */
-val HushGradient = Brush.linearGradient(
-    listOf(Color(0xFF7C5CFC), Color(0xFF9E7BFF), Color(0xFF5CA8FC))
+/** Dusk-sky gradient, reserved for rare brand moments (onboarding hero). */
+val DuskGradient = Brush.linearGradient(
+    listOf(Color(0xFF3E3663), Color(0xFF6B5490), Color(0xFF96688F))
 )
 
 /**
- * Large screen header used at the top of every tab: bold title, quiet
- * subtitle, and an optional trailing element (status pill, count badge).
+ * Editorial screen header: a large serif title over a quiet one-line
+ * subtitle, with an optional trailing element (status pill, action).
  */
 @Composable
 fun HushHeader(
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
-    leadingIcon: ImageVector? = null,
     trailing: (@Composable () -> Unit)? = null
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+            .padding(horizontal = 24.dp)
+            .padding(top = 24.dp, bottom = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (leadingIcon != null) {
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(HushGradient),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = leadingIcon,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-        }
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
-            Spacer(modifier = Modifier.height(1.dp))
+            Spacer(modifier = Modifier.height(3.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
@@ -88,17 +74,17 @@ fun HushHeader(
     }
 }
 
-/** Small colored status pill, e.g. "● On-device AI". */
+/** Small status pill: hairline ring, soft wash, and a colored dot. */
 @Composable
 fun StatusPill(
     label: String,
     color: Color,
-    background: Color,
     modifier: Modifier = Modifier
 ) {
     Surface(
         shape = CircleShape,
-        color = background,
+        color = color.copy(alpha = 0.08f),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.28f)),
         modifier = modifier
     ) {
         Row(
@@ -108,7 +94,7 @@ fun StatusPill(
         ) {
             Box(
                 modifier = Modifier
-                    .size(7.dp)
+                    .size(6.dp)
                     .clip(CircleShape)
                     .background(color)
             )
@@ -122,17 +108,18 @@ fun StatusPill(
     }
 }
 
-/** Tiny labeled chip used inside cards to show rule attributes. */
+/** Tiny outlined chip used inside cards to show rule attributes. */
 @Composable
 fun AttributeChip(
     icon: ImageVector?,
     label: String,
-    color: Color = AccentPurple,
+    color: Color = PlumMist,
     modifier: Modifier = Modifier
 ) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = color.copy(alpha = 0.12f),
+        color = Color.Transparent,
+        border = BorderStroke(1.dp, color.copy(alpha = 0.35f)),
         modifier = modifier
     ) {
         Row(
@@ -158,7 +145,25 @@ fun AttributeChip(
     }
 }
 
-/** Shared empty-state layout: soft icon disc, title, and helper text. */
+/** Flat card with a hairline border — the Nocturne surface idiom. */
+@Composable
+fun QuietSurface(
+    modifier: Modifier = Modifier,
+    shape: androidx.compose.ui.graphics.Shape = MaterialTheme.shapes.large,
+    color: Color = MaterialTheme.colorScheme.surfaceVariant,
+    borderColor: Color = MaterialTheme.colorScheme.outline,
+    content: @Composable () -> Unit
+) {
+    Surface(
+        modifier = modifier,
+        shape = shape,
+        color = color,
+        border = BorderStroke(1.dp, borderColor),
+        content = content
+    )
+}
+
+/** Shared empty-state layout: outlined icon ring, serif title, helper text. */
 @Composable
 fun EmptyState(
     icon: ImageVector,
@@ -174,28 +179,30 @@ fun EmptyState(
             modifier = Modifier
                 .size(88.dp)
                 .clip(CircleShape)
-                .background(AccentPurple.copy(alpha = 0.10f)),
+                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = AccentPurple.copy(alpha = 0.8f)
+                modifier = Modifier.size(36.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Spacer(modifier = Modifier.height(20.dp))
         Text(
             title,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             message,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = TextAlign.Center
         )
     }
 }
