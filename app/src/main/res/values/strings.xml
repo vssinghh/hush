@@ -4,4 +4,8 @@
     <string name="block">Block</string>
     <string name="mute">Mute</string>
     <string name="allow">Allow</string>
+    <string name="show_theme">Show theme options</string>
+    <string name="show_retention">Show retention menu</string>
+    <string name="show_ruletester">Show rule tester</string>
+    <string name="rerun_wizard">Re-run first-time setup wizard</string>
 </resources>
