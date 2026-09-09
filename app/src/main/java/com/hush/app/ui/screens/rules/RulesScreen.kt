@@ -1,5 +1,6 @@
 package com.hush.app.ui.screens.rules
 
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,10 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.hush.app.R
 import com.hush.app.domain.model.MatchField
 import com.hush.app.domain.model.Rule
 import com.hush.app.domain.model.RuleAction
@@ -49,6 +52,12 @@ private fun actionIcon(action: RuleAction): ImageVector = when (action) {
     RuleAction.BLOCK -> Icons.Outlined.Block
     RuleAction.MUTE -> Icons.Outlined.VolumeOff
     RuleAction.ALLOW -> Icons.Outlined.DoneAll
+}
+
+private fun getContentDescription(action: RuleAction, context: Context): String = when (action) {
+    RuleAction.BLOCK -> context.getString(R.string.block)
+    RuleAction.MUTE -> context.getString(R.string.mute)
+    RuleAction.ALLOW -> context.getString(R.string.allow)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -210,7 +219,10 @@ fun RulesScreen(
                                 leadingIcon = {
                                     Icon(
                                         imageVector = actionIcon(action),
-                                        contentDescription = null,
+                                        contentDescription = getContentDescription(
+                                            action,
+                                            LocalContext.current
+                                        ),
                                         modifier = Modifier.size(16.dp)
                                     )
                                 },
