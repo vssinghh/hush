@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +39,7 @@ import com.hush.app.domain.model.RuleAction
 import com.hush.app.ui.components.HushHeader
 import com.hush.app.ui.components.QuietSurface
 import com.hush.app.ui.theme.*
+import com.hush.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -145,7 +147,7 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.width(4.dp))
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.show_theme),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -216,7 +218,7 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.width(4.dp))
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.show_retention),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -295,7 +297,7 @@ fun SettingsScreen(
                                 Icons.Filled.KeyboardArrowDown
                             else
                                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.show_ruletester),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -468,7 +470,7 @@ fun SettingsScreen(
                     trailing = {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.rerun_wizard),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -546,7 +548,7 @@ private fun SettingsRow(
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = null,
+                contentDescription = null, // too generalist for a contentDescription
                 tint = accent,
                 modifier = Modifier.size(20.dp)
             )
